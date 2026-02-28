@@ -1,14 +1,14 @@
 import { Utensils } from "lucide-react"
 
 const categories = [
-  { name: "Jollof Rice", image: "/placeholder.svg?height=120&width=120" },
-  { name: "Egusi Soup", image: "/placeholder.svg?height=120&width=120" },
-  { name: "Suya", image: "/placeholder.svg?height=120&width=120" },
-  { name: "Pounded Yam", image: "/placeholder.svg?height=120&width=120" },
-  { name: "Pepper Soup", image: "/placeholder.svg?height=120&width=120" },
-  { name: "Puff Puff", image: "/placeholder.svg?height=120&width=120" },
-  { name: "Fried Rice", image: "/placeholder.svg?height=120&width=120" },
-  { name: "Plantain", image: "/placeholder.svg?height=120&width=120" },
+  { name: "Jollof Rice", image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=120&h=120&fit=crop&q=80" },
+  { name: "Egusi Soup", image: "https://images.unsplash.com/photo-1567364816519-cbc9c4ffe1eb?w=120&h=120&fit=crop&q=80" },
+  { name: "Suya", image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=120&h=120&fit=crop&q=80" },
+  { name: "Pounded Yam", image: "https://images.unsplash.com/photo-1574484284002-952d92456975?w=120&h=120&fit=crop&q=80" },
+  { name: "Pepper Soup", image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=120&h=120&fit=crop&q=80" },
+  { name: "Puff Puff", image: "https://images.unsplash.com/photo-1517433367941-f7ef4e027d40?w=120&h=120&fit=crop&q=80" },
+  { name: "Fried Rice", image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=120&h=120&fit=crop&q=80" },
+  { name: "Plantain", image: "https://images.unsplash.com/photo-1528751014936-863e6e7a319c?w=120&h=120&fit=crop&q=80" },
 ]
 
 export function MenuCategories() {
@@ -29,6 +29,7 @@ export function MenuCategories() {
                 src={cat.image}
                 alt={cat.name}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                crossOrigin="anonymous"
               />
             </div>
             <span className="text-xs font-medium text-foreground text-center">{cat.name}</span>

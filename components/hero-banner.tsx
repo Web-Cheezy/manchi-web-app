@@ -8,25 +8,28 @@ const slides = [
     id: 1,
     title: "Get 10% Off",
     subtitle: "Your First Order!",
-    description: "Order your favourite Nigerian dishes and enjoy a special discount on us. Use code MANCHI10 at checkout.",
+    description:
+      "Order your favourite Nigerian dishes and enjoy a special discount on us. Use code MANCHI10 at checkout.",
     bgColor: "bg-gradient-to-r from-primary/90 to-accent/80",
-    image: "/placeholder.svg?height=400&width=600",
+    image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=600&h=400&fit=crop&q=80",
   },
   {
     id: 2,
     title: "Earn \u20A62,000",
     subtitle: "Just By Sharing!",
-    description: "Share your unique referral link with friends. When they make their first \u20A61,500+ order, you both get \u20A62,000.",
+    description:
+      "Share your unique referral link with friends. When they make their first \u20A61,500+ order, you both get \u20A62,000.",
     bgColor: "bg-gradient-to-r from-accent/90 to-primary/80",
-    image: "/placeholder.svg?height=400&width=600",
+    image: "https://images.unsplash.com/photo-1567364816519-cbc9c4ffe1eb?w=600&h=400&fit=crop&q=80",
   },
   {
     id: 3,
     title: "Free Delivery",
     subtitle: "On Orders Over \u20A65,000",
-    description: "Enjoy free delivery when you order above \u20A65,000. Fresh Nigerian food straight to your doorstep!",
+    description:
+      "Enjoy free delivery when you order above \u20A65,000. Fresh Nigerian food straight to your doorstep!",
     bgColor: "bg-gradient-to-r from-primary/80 to-primary",
-    image: "/placeholder.svg?height=400&width=600",
+    image: "https://images.unsplash.com/photo-1574484284002-952d92456975?w=600&h=400&fit=crop&q=80",
   },
 ]
 
@@ -54,7 +57,9 @@ export function HeroBanner() {
       >
         {slides.map((slide) => (
           <div key={slide.id} className="min-w-full">
-            <div className={`${slide.bgColor} relative min-h-[280px] sm:min-h-[360px] lg:min-h-[420px] flex items-center`}>
+            <div
+              className={`${slide.bgColor} relative min-h-[280px] sm:min-h-[360px] lg:min-h-[420px] flex items-center`}
+            >
               <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between w-full px-6 py-10 lg:px-16 lg:py-14 gap-6">
                 <div className="max-w-lg">
                   <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-primary-foreground tracking-tight text-balance">
@@ -64,22 +69,18 @@ export function HeroBanner() {
                     {slide.subtitle}
                   </h3>
                   <div className="mt-4 bg-foreground/80 rounded-lg p-4 max-w-md">
-                    <p className="text-sm text-primary-foreground leading-relaxed">
-                      {slide.description}
-                    </p>
+                    <p className="text-sm text-primary-foreground leading-relaxed">{slide.description}</p>
                   </div>
                 </div>
                 <div className="hidden lg:block">
                   <img
                     src={slide.image}
                     alt=""
-                    className="w-64 h-64 object-cover rounded-xl"
+                    className="w-64 h-64 object-cover rounded-xl shadow-lg"
                     crossOrigin="anonymous"
                   />
                 </div>
               </div>
-              {/* Decorative overlay */}
-              <div className="absolute inset-0 bg-[url('/placeholder.svg?height=420&width=1400')] opacity-10 bg-cover bg-center" />
             </div>
           </div>
         ))}

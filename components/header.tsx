@@ -32,9 +32,8 @@ export function Header() {
           </Sheet>
 
           {/* Logo */}
-          <a href="/" className="flex flex-col leading-none">
-            <span className="text-xs font-bold text-primary tracking-wide">eat</span>
-            <span className="text-2xl font-extrabold text-foreground tracking-tight -mt-1">Manchi</span>
+          <a href="/" className="flex items-baseline leading-none">
+            <span className="text-2xl font-extrabold text-primary tracking-tight">Manchi</span>
           </a>
         </div>
 

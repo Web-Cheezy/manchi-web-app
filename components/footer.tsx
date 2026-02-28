@@ -7,12 +7,11 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
-            <a href="/" className="flex flex-col leading-none mb-4">
-              <span className="text-xs font-bold text-primary tracking-wide">eat</span>
-              <span className="text-2xl font-extrabold text-footer-foreground tracking-tight -mt-1">Manchi</span>
+            <a href="/" className="flex items-baseline leading-none mb-4">
+              <span className="text-2xl font-extrabold text-primary tracking-tight">Manchi</span>
             </a>
             <p className="text-sm text-footer-foreground/70 leading-relaxed max-w-xs">
-              Authentic Nigerian food delivered fast to your door from our multiple locations.
+              Delicious Nigerian food delivered fast to your door from our multiple locations.
             </p>
             <div className="flex items-center gap-3 mt-5">
               <a href="#" aria-label="Instagram" className="text-footer-foreground/60 hover:text-primary transition-colors">

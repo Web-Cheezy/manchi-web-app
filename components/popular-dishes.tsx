@@ -7,7 +7,7 @@ const dishes = [
     price: "3,500",
     rating: 4.8,
     reviews: 124,
-    image: "/placeholder.svg?height=200&width=300",
+    image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&h=260&fit=crop&q=80",
     tag: "Best Seller",
   },
   {
@@ -15,7 +15,7 @@ const dishes = [
     price: "4,200",
     rating: 4.9,
     reviews: 98,
-    image: "/placeholder.svg?height=200&width=300",
+    image: "https://images.unsplash.com/photo-1567364816519-cbc9c4ffe1eb?w=400&h=260&fit=crop&q=80",
     tag: "Popular",
   },
   {
@@ -23,7 +23,7 @@ const dishes = [
     price: "2,800",
     rating: 4.7,
     reviews: 156,
-    image: "/placeholder.svg?height=200&width=300",
+    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=260&fit=crop&q=80",
     tag: null,
   },
   {
@@ -31,7 +31,7 @@ const dishes = [
     price: "5,000",
     rating: 4.6,
     reviews: 87,
-    image: "/placeholder.svg?height=200&width=300",
+    image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&h=260&fit=crop&q=80",
     tag: "Spicy",
   },
   {
@@ -39,7 +39,7 @@ const dishes = [
     price: "3,800",
     rating: 4.8,
     reviews: 72,
-    image: "/placeholder.svg?height=200&width=300",
+    image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&h=260&fit=crop&q=80",
     tag: null,
   },
   {
@@ -47,7 +47,7 @@ const dishes = [
     price: "2,500",
     rating: 4.5,
     reviews: 63,
-    image: "/placeholder.svg?height=200&width=300",
+    image: "https://images.unsplash.com/photo-1528751014936-863e6e7a319c?w=400&h=260&fit=crop&q=80",
     tag: "Value",
   },
 ]
@@ -57,7 +57,9 @@ export function PopularDishes() {
     <section id="popular" className="px-4 py-10 lg:px-16 bg-secondary/50">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-foreground">Popular Dishes</h2>
-        <a href="#" className="text-sm text-primary font-medium hover:underline">View All</a>
+        <a href="#" className="text-sm text-primary font-medium hover:underline">
+          View All
+        </a>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {dishes.map((dish) => (
@@ -70,6 +72,7 @@ export function PopularDishes() {
                 src={dish.image}
                 alt={dish.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                crossOrigin="anonymous"
               />
               {dish.tag && (
                 <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-semibold px-2.5 py-1 rounded-full">
@@ -85,7 +88,7 @@ export function PopularDishes() {
                 <span className="text-xs text-muted-foreground">({dish.reviews})</span>
               </div>
               <div className="flex items-center justify-between mt-3">
-                <span className="text-lg font-bold text-foreground">{'\u20A6'}{dish.price}</span>
+                <span className="text-lg font-bold text-foreground">{"\u20A6"}{dish.price}</span>
                 <Button
                   size="sm"
                   className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full h-8 w-8 p-0"
