@@ -1,14 +1,21 @@
+import Image from "next/image"
 import { Mail, Phone, MapPin, Instagram, Twitter, Facebook } from "lucide-react"
 
 export function Footer() {
   return (
     <footer className="bg-footer-bg text-footer-foreground">
-      <div className="px-4 py-12 lg:px-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+      <div className="px-4 py-10">
+        <div className="mx-auto max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div>
-            <a href="/" className="flex items-baseline leading-none mb-4">
-              <span className="text-2xl font-extrabold text-primary tracking-tight">Manchi</span>
+            <a href="/" className="flex items-center mb-4">
+              <Image
+                src="/logos/manchi-primary-dark-mode.png"
+                alt="Manchi"
+                width={120}
+                height={40}
+                className="h-9 w-auto"
+              />
             </a>
             <p className="text-sm text-footer-foreground/70 leading-relaxed max-w-xs">
               Delicious Nigerian food delivered fast to your door from our multiple locations.
@@ -92,7 +99,7 @@ export function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-footer-foreground/10">
-        <div className="px-4 py-5 lg:px-16 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="mx-auto max-w-6xl px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-footer-foreground/50">
             {'\u00A9'} 2026 Manchi. All rights reserved.
           </p>
@@ -100,18 +107,6 @@ export function Footer() {
             Terms of Service
           </a>
         </div>
-      </div>
-
-      {/* Chat button */}
-      <div className="fixed bottom-6 left-6 z-50">
-        <button
-          aria-label="Open chat"
-          className="bg-[#25D366] hover:bg-[#20BD5A] text-card rounded-full p-3.5 shadow-lg transition-colors"
-        >
-          <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
-          </svg>
-        </button>
       </div>
     </footer>
   )

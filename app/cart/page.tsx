@@ -1,19 +1,18 @@
 import { Header } from "@/components/header"
-import { HomeContent } from "@/components/home-content"
 import { Footer } from "@/components/footer"
-import { getCategories, getFoods } from "@/lib/db"
 import { getUser } from "@/lib/auth.server"
 import { getAddresses } from "@/lib/db/addresses.server"
 import { getProfileServer } from "@/lib/db/profiles.server"
 import { isPhoneMissing } from "@/lib/db/profiles"
+import { getFoods } from "@/lib/db"
+import { CartContent } from "./cart-content"
 
-export default async function Home() {
+export default async function CartPage() {
   const user = await getUser()
-  const [categories, foods, addresses, profile] = await Promise.all([
-    getCategories(),
-    getFoods(),
+  const [addresses, profile, foods] = await Promise.all([
     user ? getAddresses(user.id) : Promise.resolve([]),
     user ? getProfileServer(user.id) : Promise.resolve(null),
+    getFoods(),
   ])
 
   const defaultAddress = addresses.find((a) => a.is_default) ?? addresses[0] ?? null
@@ -28,9 +27,16 @@ export default async function Home() {
         profileIncomplete={profileIncomplete}
         foods={foods}
       />
-      <main className="max-w-6xl mx-auto px-4 lg:px-0 space-y-12 py-10">
-        <HomeContent categories={categories} foods={foods} />
+
+      <main className="max-w-4xl mx-auto px-4 lg:px-0 py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-8">Your Cart</h1>
+        <CartContent 
+          userId={user?.id ?? null}
+          profileIncomplete={profileIncomplete}
+          hasAddress={addresses.length > 0}
+        />
       </main>
+
       <Footer />
     </div>
   )

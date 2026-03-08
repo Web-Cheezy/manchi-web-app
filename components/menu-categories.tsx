@@ -1,40 +1,81 @@
+"use client"
+
 import { Utensils } from "lucide-react"
+import type { Category } from "@/lib/db/types"
 
-const categories = [
-  { name: "Jollof Rice", image: "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=120&h=120&fit=crop&q=80" },
-  { name: "Egusi Soup", image: "https://images.unsplash.com/photo-1567364816519-cbc9c4ffe1eb?w=120&h=120&fit=crop&q=80" },
-  { name: "Suya", image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=120&h=120&fit=crop&q=80" },
-  { name: "Pounded Yam", image: "https://images.unsplash.com/photo-1574484284002-952d92456975?w=120&h=120&fit=crop&q=80" },
-  { name: "Pepper Soup", image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=120&h=120&fit=crop&q=80" },
-  { name: "Puff Puff", image: "https://images.unsplash.com/photo-1517433367941-f7ef4e027d40?w=120&h=120&fit=crop&q=80" },
-  { name: "Fried Rice", image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=120&h=120&fit=crop&q=80" },
-  { name: "Plantain", image: "https://images.unsplash.com/photo-1528751014936-863e6e7a319c?w=120&h=120&fit=crop&q=80" },
-]
+const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=120&h=120&fit=crop&q=80"
 
-export function MenuCategories() {
+interface MenuCategoriesProps {
+  categories: Category[]
+  selectedCategoryId?: number | null
+  onSelectCategoryId?: (id: number | null) => void
+}
+
+export function MenuCategories({ categories, selectedCategoryId = null, onSelectCategoryId }: MenuCategoriesProps) {
+  const selectedId = selectedCategoryId ?? null
+  const setSelectedId = onSelectCategoryId ?? (() => {})
+
   return (
-    <section id="menu" className="px-4 py-10 lg:px-16">
-      <div className="flex items-center gap-3 mb-6">
-        <Utensils className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-bold text-foreground">Our Menu</h2>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4">
-        {categories.map((cat) => (
-          <button
-            key={cat.name}
-            className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border hover:border-primary hover:shadow-md transition-all group"
+    <section id="menu" className="py-4">
+      <div className="space-y-3 rounded-2xl border border-border bg-card px-3 py-4 sm:px-4 sm:py-5 lg:px-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-primary/10">
+            <Utensils className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          </div>
+          <div className="flex flex-col">
+            <h2 className="text-sm sm:text-base font-semibold text-foreground">What are you in the mood for?</h2>
+            <p className="text-[11px] sm:text-xs text-muted-foreground">
+              Browse by popular Manchi categories.
+            </p>
+          </div>
+          <a
+            href="#"
+            className="ml-auto hidden sm:inline-flex items-center rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-foreground hover:border-primary/50 hover:bg-card transition-colors"
           >
-            <div className="w-16 h-16 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-              <img
-                src={cat.image}
-                alt={cat.name}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform"
-                crossOrigin="anonymous"
-              />
-            </div>
-            <span className="text-xs font-medium text-foreground text-center">{cat.name}</span>
-          </button>
-        ))}
+            See all
+          </a>
+        </div>
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-card to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-card to-transparent" />
+          <div className="-mx-2 flex gap-2 overflow-x-auto px-2 pb-1 pt-1 sm:pt-2 no-scrollbar">
+            <button
+              type="button"
+              onClick={() => setSelectedId(null)}
+              aria-pressed={selectedId === null}
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
+                selectedId === null
+                  ? "border-primary/60 bg-primary/10 text-foreground"
+                  : "border-border bg-background text-foreground hover:border-primary/60 hover:bg-card"
+              }`}
+            >
+              All
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedId(cat.id)}
+                aria-pressed={selectedId === cat.id}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs sm:text-sm whitespace-nowrap transition-colors ${
+                  selectedId === cat.id
+                    ? "border-primary/60 bg-primary/10 text-foreground font-medium"
+                    : "border-border bg-background text-foreground hover:border-primary/60 hover:bg-card font-medium"
+                }`}
+              >
+                <div className="h-6 w-6 overflow-hidden rounded-full bg-muted border border-border/60">
+                  <img
+                    src={cat.image_url || PLACEHOLDER_IMAGE}
+                    alt={cat.name}
+                    className="h-full w-full object-cover"
+                    crossOrigin="anonymous"
+                  />
+                </div>
+                <span>{cat.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   )
