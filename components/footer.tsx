@@ -80,17 +80,23 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-footer-foreground mb-4">Contact Info</h3>
             <div className="flex flex-col gap-3">
-              <a href="mailto:hello@manchi.ng" className="flex items-center gap-2 text-sm text-footer-foreground/70 hover:text-primary transition-colors">
+              <a href="mailto:test@manchi.com" className="flex items-center gap-2 text-sm text-footer-foreground/70 hover:text-primary transition-colors">
                 <Mail className="h-4 w-4 shrink-0" />
-                hello@manchi.ng
+                test@manchi.com
               </a>
-              <a href="tel:+2348001234567" className="flex items-center gap-2 text-sm text-footer-foreground/70 hover:text-primary transition-colors">
+              <a href="tel:+23401010101010" className="flex items-center gap-2 text-sm text-footer-foreground/70 hover:text-primary transition-colors">
                 <Phone className="h-4 w-4 shrink-0" />
-                +234 800 123 4567
+                +234 010 101 01010
               </a>
-              <div className="flex items-start gap-2 text-sm text-footer-foreground/70">
-                <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>12 Adeola Odeku Street, Victoria Island, Lagos</span>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-start gap-2 text-sm text-footer-foreground/70">
+                  <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span><strong className="text-footer-foreground/90">Chasemall:</strong> 33, Abakaliki Road by 38 Bus Stop, GRA, Enugu, Enugu State.</span>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-footer-foreground/70">
+                  <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span><strong className="text-footer-foreground/90">Aurora Mall:</strong> No. 39 Uyo Street off Stadium Road, Beside Save a Life, Rumuomasi Port Harcourt, Rivers State.</span>
+                </div>
               </div>
             </div>
           </div>

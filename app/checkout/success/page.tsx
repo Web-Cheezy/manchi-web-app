@@ -9,7 +9,15 @@ import { getProfileServer } from "@/lib/db/profiles.server"
 import { isPhoneMissing } from "@/lib/db/profiles"
 import { getFoods } from "@/lib/db"
 
-export default async function CheckoutSuccessPage() {
+export default async function CheckoutSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ method?: string; location?: string }>
+}) {
+  const { method: methodParam, location: locationParam } = await searchParams
+  const isPickup = methodParam === "pickup"
+  const storeLocation = locationParam === "Aurora" ? "Aurora Mall" : locationParam === "Chasemall" ? "Chasemall" : null
+
   const user = await getUser()
   const [addresses, profile, foods] = await Promise.all([
     user ? getAddresses(user.id) : Promise.resolve([]),
@@ -75,17 +83,32 @@ export default async function CheckoutSuccessPage() {
                   <span className="text-sm font-semibold text-muted-foreground">3</span>
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">On the Way</p>
+                  <p className="font-medium text-foreground">
+                    {isPickup ? "Ready for Pickup" : "On the Way"}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    A rider will pick up your order and deliver it to you.
+                    {isPickup
+                      ? "Come to our restaurant to collect your order when we notify you."
+                      : "A rider will pick up your order and deliver it to you."}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-border flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>Estimated delivery: 30-45 minutes</span>
+            <div className="mt-6 pt-4 border-t border-border space-y-2">
+              {storeLocation && (
+                <p className="text-sm text-muted-foreground">
+                  Your order will be prepared at <strong className="text-foreground">Manchi, {storeLocation}</strong>.
+                </p>
+              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>
+                  {isPickup
+                    ? "Estimated ready for pickup: 15-20 minutes"
+                    : "Estimated delivery: 30-45 minutes"}
+                </span>
+              </div>
             </div>
           </div>
 

@@ -6,11 +6,15 @@ import {
   useReducer,
   useEffect,
   useCallback,
+  useState,
   type ReactNode,
 } from "react"
 import type { Cart, CartItem, CartSideItem } from "@/lib/db/types"
+import type { DeliveryMethod, StoreLocation } from "@/lib/db/types"
 
 const CART_STORAGE_KEY = "manchi-cart"
+const DELIVERY_METHOD_STORAGE_KEY = "manchi-delivery-method"
+const STORE_LOCATION_STORAGE_KEY = "manchi-store-location"
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface AddToCartPayload {
@@ -33,6 +37,10 @@ interface CartContextValue {
   cart: Cart
   itemCount: number
   subtotal: number
+  deliveryMethod: DeliveryMethod
+  setDeliveryMethod: (method: DeliveryMethod) => void
+  storeLocation: StoreLocation
+  setStoreLocation: (location: StoreLocation) => void
   addToCart: (payload: AddToCartPayload) => void
   removeFromCart: (itemId: string) => void
   updateQuantity: (itemId: string, quantity: number) => void
@@ -153,6 +161,8 @@ const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, dispatch] = useReducer(cartReducer, initialCart)
+  const [deliveryMethod, setDeliveryMethodState] = useState<DeliveryMethod>("delivery")
+  const [storeLocation, setStoreLocationState] = useState<StoreLocation>("Chasemall")
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -169,6 +179,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Load delivery method from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(DELIVERY_METHOD_STORAGE_KEY)
+      if (stored === "delivery" || stored === "pickup") {
+        setDeliveryMethodState(stored)
+      }
+    } catch (e) {
+      console.error("[CartProvider] Failed to load delivery method from storage:", e)
+    }
+  }, [])
+
+  // Load store location from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORE_LOCATION_STORAGE_KEY)
+      if (stored === "Chasemall" || stored === "Aurora") {
+        setStoreLocationState(stored)
+      }
+    } catch (e) {
+      console.error("[CartProvider] Failed to load store location from storage:", e)
+    }
+  }, [])
+
   // Save cart to localStorage on change
   useEffect(() => {
     try {
@@ -177,6 +211,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
       console.error("[CartProvider] Failed to save cart to storage:", e)
     }
   }, [cart])
+
+  // Save delivery method to localStorage on change
+  useEffect(() => {
+    try {
+      localStorage.setItem(DELIVERY_METHOD_STORAGE_KEY, deliveryMethod)
+    } catch (e) {
+      console.error("[CartProvider] Failed to save delivery method to storage:", e)
+    }
+  }, [deliveryMethod])
+
+  // Save store location to localStorage on change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORE_LOCATION_STORAGE_KEY, storeLocation)
+    } catch (e) {
+      console.error("[CartProvider] Failed to save store location to storage:", e)
+    }
+  }, [storeLocation])
+
+  const setDeliveryMethod = useCallback((method: DeliveryMethod) => {
+    setDeliveryMethodState(method)
+  }, [])
+
+  const setStoreLocation = useCallback((location: StoreLocation) => {
+    setStoreLocationState(location)
+  }, [])
 
   const addToCart = useCallback((payload: AddToCartPayload) => {
     dispatch({ type: "ADD_ITEM", payload })
@@ -202,6 +262,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     cart,
     itemCount: calculateItemCount(cart.items),
     subtotal: calculateSubtotal(cart.items),
+    deliveryMethod,
+    setDeliveryMethod,
+    storeLocation,
+    setStoreLocation,
     addToCart,
     removeFromCart,
     updateQuantity,

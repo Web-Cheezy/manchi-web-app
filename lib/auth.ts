@@ -43,6 +43,43 @@ export async function signUp(email: string, password: string, options?: SignUpOp
   return { user: data.user, error: null }
 }
 
+/**
+ * Send a one-time code to the user's email. Supabase may send either a 6-digit code or a magic link
+ * depending on project settings. Use verifyEmailCode() to verify the 6-digit code.
+ * Works for both sign-in and sign-up (new users are created when they verify).
+ */
+export async function sendEmailCode(email: string, next = "/") {
+  const supabase = createClient()
+  const origin = typeof window !== "undefined" ? window.location.origin : ""
+  const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent(next)}`
+  const { error } = await supabase.auth.signInWithOtp({
+    email: email.trim(),
+    options: {
+      emailRedirectTo,
+    },
+  })
+  if (error) {
+    return { success: false, error: error.message }
+  }
+  return { success: true, error: null }
+}
+
+/**
+ * Verify the 6-digit code sent to the user's email. Use after sendEmailCode().
+ */
+export async function verifyEmailCode(email: string, token: string) {
+  const supabase = createClient()
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: email.trim(),
+    token: token.trim(),
+    type: "email",
+  })
+  if (error) {
+    return { user: null, error: error.message }
+  }
+  return { user: data.user, error: null }
+}
+
 /** Sign out */
 export async function signOut() {
   const supabase = createClient()

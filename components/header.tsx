@@ -39,10 +39,9 @@ export function Header({
   foods = [],
   onAddressChange,
 }: HeaderProps) {
-  const [activeTab, setActiveTab] = useState<"delivery" | "pickup">("delivery")
   const [mounted, setMounted] = useState(false)
   const { theme, setTheme } = useTheme()
-  const { itemCount } = useCart()
+  const { itemCount, deliveryMethod, setDeliveryMethod } = useCart()
 
   useEffect(() => {
     setMounted(true)
@@ -248,19 +247,19 @@ export function Header({
             {/* Delivery/Pickup toggle - hidden on mobile, shown on sm+ */}
             <div className="hidden sm:flex items-center gap-0.5 bg-muted rounded-full p-0.5">
               <button
-                onClick={() => setActiveTab("delivery")}
+                onClick={() => setDeliveryMethod("delivery")}
                 className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
-                  activeTab === "delivery"
-                    ? "bg-card text-foreground shadow-sm"
+                  deliveryMethod === "delivery"
+                    ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 Delivery
               </button>
               <button
-                onClick={() => setActiveTab("pickup")}
+                onClick={() => setDeliveryMethod("pickup")}
                 className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
-                  activeTab === "pickup"
+                  deliveryMethod === "pickup"
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -321,19 +320,19 @@ export function Header({
         <div className="flex sm:hidden items-center justify-center mt-2">
           <div className="flex items-center gap-0.5 bg-muted rounded-full p-0.5">
             <button
-              onClick={() => setActiveTab("delivery")}
+              onClick={() => setDeliveryMethod("delivery")}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                activeTab === "delivery"
-                  ? "bg-card text-foreground shadow-sm"
+                deliveryMethod === "delivery"
+                  ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Delivery
             </button>
             <button
-              onClick={() => setActiveTab("pickup")}
+              onClick={() => setDeliveryMethod("pickup")}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                activeTab === "pickup"
+                deliveryMethod === "pickup"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
               }`}

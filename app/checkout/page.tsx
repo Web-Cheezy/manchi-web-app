@@ -27,11 +27,9 @@ export default async function CheckoutPage() {
     redirect("/account?message=phone-required")
   }
 
-  if (addresses.length === 0) {
-    redirect("/account/addresses?message=address-required")
-  }
-
+  // Allow checkout with no addresses when user chooses pickup (handled in client)
   const defaultAddress = addresses.find((a) => a.is_default) ?? addresses[0]
+  const defaultAddressId = defaultAddress?.id ?? ""
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,7 +45,7 @@ export default async function CheckoutPage() {
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-8">Checkout</h1>
         <CheckoutContent
           addresses={addresses}
-          defaultAddressId={defaultAddress.id}
+          defaultAddressId={defaultAddressId}
           userEmail={user.email ?? ""}
           userPhone={profile?.phone || profile?.phone_number || ""}
         />

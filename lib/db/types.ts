@@ -70,11 +70,17 @@ export interface OrderItem {
 }
 
 // ─── orders ───────────────────────────────────────────────────────────────
+export type DeliveryMethod = "delivery" | "pickup"
+
+/** Manchi branch / store location for order fulfillment */
+export type StoreLocation = "Chasemall" | "Aurora"
+
 export interface Order {
   id: number
   user_id: string
   status: string
   total_amount: number
+  delivery_method: DeliveryMethod
   delivery_address: string | null
   delivery_lat: number | null
   delivery_lng: number | null

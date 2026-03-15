@@ -39,7 +39,7 @@ interface CartContentProps {
 }
 
 export function CartContent({ userId, profileIncomplete, hasAddress }: CartContentProps) {
-  const { cart, itemCount, subtotal, removeFromCart, updateQuantity, clearCart, getItemTotal } = useCart()
+  const { cart, itemCount, subtotal, removeFromCart, updateQuantity, clearCart, getItemTotal, deliveryMethod } = useCart()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
 
@@ -56,10 +56,12 @@ export function CartContent({ userId, profileIncomplete, hasAddress }: CartConte
     return <EmptyCart />
   }
 
+  const isPickup = deliveryMethod === "pickup"
+  const deliveryFee = isPickup ? 0 : DELIVERY_FEE
   const vat = Math.round(subtotal * VAT_RATE)
-  const total = subtotal + vat + DELIVERY_FEE
+  const total = subtotal + vat + deliveryFee
 
-  const canCheckout = userId && !profileIncomplete && hasAddress
+  const canCheckout = userId && !profileIncomplete && (isPickup || hasAddress)
 
   const handleCheckout = () => {
     if (!userId) {
@@ -70,7 +72,7 @@ export function CartContent({ userId, profileIncomplete, hasAddress }: CartConte
       router.push("/account?message=phone-required")
       return
     }
-    if (!hasAddress) {
+    if (!isPickup && !hasAddress) {
       router.push("/account/addresses")
       return
     }
@@ -136,10 +138,12 @@ export function CartContent({ userId, profileIncomplete, hasAddress }: CartConte
               <span>VAT (7.5%)</span>
               <span>₦{formatPrice(vat)}</span>
             </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>Delivery fee</span>
-              <span>₦{formatPrice(DELIVERY_FEE)}</span>
-            </div>
+            {!isPickup && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Delivery fee</span>
+                <span>₦{formatPrice(DELIVERY_FEE)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-semibold text-foreground text-base pt-3 border-t border-border">
               <span>Total</span>
               <span>₦{formatPrice(total)}</span>
@@ -173,7 +177,7 @@ export function CartContent({ userId, profileIncomplete, hasAddress }: CartConte
             </div>
           )}
 
-          {userId && !profileIncomplete && !hasAddress && (
+          {userId && !profileIncomplete && !isPickup && !hasAddress && (
             <div className="flex items-start gap-2 rounded-lg bg-muted p-3 text-sm">
               <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
               <p className="text-muted-foreground">
@@ -191,7 +195,13 @@ export function CartContent({ userId, profileIncomplete, hasAddress }: CartConte
             size="lg"
             className="w-full h-12 text-base font-semibold"
           >
-            {!userId ? "Sign in to checkout" : canCheckout ? "Proceed to checkout" : "Complete profile"}
+            {!userId
+              ? "Sign in to checkout"
+              : canCheckout
+                ? "Proceed to checkout"
+                : profileIncomplete
+                  ? "Complete profile"
+                  : "Add delivery address"}
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
 

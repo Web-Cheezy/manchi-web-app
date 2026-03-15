@@ -15,9 +15,10 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle2,
+  Store,
+  Building2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useCart } from "@/lib/cart"
@@ -42,7 +43,7 @@ export function CheckoutContent({
   userEmail,
   userPhone,
 }: CheckoutContentProps) {
-  const { cart, itemCount, subtotal, getItemTotal, clearCart } = useCart()
+  const { cart, itemCount, subtotal, getItemTotal, clearCart, deliveryMethod, storeLocation, setStoreLocation } = useCart()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [selectedAddressId, setSelectedAddressId] = useState(defaultAddressId)
@@ -61,76 +62,150 @@ export function CheckoutContent({
     return <EmptyCart />
   }
 
+  const isPickup = deliveryMethod === "pickup"
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0]
+  const hasValidAddress = !isPickup && selectedAddress
   const vat = Math.round(subtotal * VAT_RATE)
-  const total = subtotal + vat + DELIVERY_FEE
+  const deliveryFee = isPickup ? 0 : DELIVERY_FEE
+  const total = subtotal + vat + deliveryFee
+  const canPlaceOrder = isPickup || hasValidAddress
 
   const handlePlaceOrder = async () => {
     setIsProcessing(true)
-    
-    // TODO: Integrate with Paystack for payment
-    // For now, simulate order placement
+
+    // TODO: Integrate with Paystack for payment; when creating order include:
+    // delivery_method, location: storeLocation, delivery_address, etc.
     await new Promise((resolve) => setTimeout(resolve, 2000))
-    
-    // Clear cart and redirect to success page
+
     clearCart()
-    router.push("/checkout/success")
+    router.push(`/checkout/success?method=${deliveryMethod}&location=${encodeURIComponent(storeLocation)}`)
   }
 
   return (
     <div className="grid lg:grid-cols-3 gap-8">
-      {/* Left: Delivery & Payment */}
+      {/* Left: Delivery/Pickup & Payment */}
       <div className="lg:col-span-2 space-y-6">
-        {/* Delivery Address */}
+        {/* Store location - which branch will process the order */}
         <section className="rounded-2xl border border-border bg-card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" />
-              Delivery Address
-            </h2>
-            <Link
-              href="/account/addresses"
-              className="text-sm text-primary font-medium hover:underline flex items-center gap-1"
-            >
-              <Edit2 className="h-3.5 w-3.5" />
-              Manage
-            </Link>
-          </div>
-
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
+            <Building2 className="h-5 w-5 text-primary" />
+            Select your nearest location
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Your order will be prepared at the location you select.
+          </p>
           <RadioGroup
-            value={selectedAddressId}
-            onValueChange={setSelectedAddressId}
-            className="space-y-3"
+            value={storeLocation}
+            onValueChange={(v) => setStoreLocation(v as "Chasemall" | "Aurora")}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
           >
-            {addresses.map((address) => (
-              <label
-                key={address.id}
-                className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-all ${
-                  selectedAddressId === address.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50"
-                }`}
+            <label
+              className={`flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition-all ${
+                storeLocation === "Chasemall"
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
+              }`}
+            >
+              <RadioGroupItem value="Chasemall" className="shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-foreground">Chasemall</span>
+                <p className="text-xs text-muted-foreground mt-0.5">33, Abakaliki Road by 38 Bus Stop, GRA, Enugu, Enugu State.</p>
+              </div>
+            </label>
+            <label
+              className={`flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition-all ${
+                storeLocation === "Aurora"
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
+              }`}
+            >
+              <RadioGroupItem value="Aurora" className="shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-foreground">Aurora Mall</span>
+                <p className="text-xs text-muted-foreground mt-0.5">No. 39 Uyo Street off Stadium Road, Beside Save a Life, Rumuomasi Port Harcourt, Rivers State.</p>
+              </div>
+            </label>
+          </RadioGroup>
+        </section>
+
+        {/* Delivery Address - only for delivery */}
+        {!isPickup && (
+          <section className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                Delivery Address
+              </h2>
+              <Link
+                href="/account/addresses"
+                className="text-sm text-primary font-medium hover:underline flex items-center gap-1"
               >
-                <RadioGroupItem value={address.id} className="mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-foreground">
-                      {address.title || "Address"}
-                    </span>
-                    {address.is_default && (
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                        Default
+                <Edit2 className="h-3.5 w-3.5" />
+                Manage
+              </Link>
+            </div>
+
+            {addresses.length === 0 ? (
+              <div className="flex items-start gap-2 rounded-lg bg-muted p-4 text-sm">
+                <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                <p className="text-muted-foreground">
+                  Please{" "}
+                  <Link href="/account/addresses" className="text-primary font-medium hover:underline">
+                    add a delivery address
+                  </Link>{" "}
+                  to place a delivery order.
+                </p>
+              </div>
+            ) : (
+            <RadioGroup
+              value={selectedAddressId}
+              onValueChange={setSelectedAddressId}
+              className="space-y-3"
+            >
+              {addresses.map((address) => (
+                <label
+                  key={address.id}
+                  className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-all ${
+                    selectedAddressId === address.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <RadioGroupItem value={address.id} className="mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-foreground">
+                        {address.title || "Address"}
                       </span>
-                    )}
+                      {address.is_default && (
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {formatAddressFull(address)}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {formatAddressFull(address)}
-                  </p>
-                </div>
               </label>
             ))}
           </RadioGroup>
-        </section>
+            )}
+          </section>
+        )}
+
+        {/* Pickup info - only for pickup */}
+        {isPickup && (
+          <section className="rounded-2xl border border-border bg-card p-6">
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Store className="h-5 w-5 text-primary" />
+              Pickup at restaurant
+            </h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              Your order will be ready for pickup at our location. We&apos;ll notify you when it&apos;s ready.
+            </p>
+          </section>
+        )}
 
         {/* Contact Info */}
         <section className="rounded-2xl border border-border bg-card p-6">
@@ -151,15 +226,19 @@ export function CheckoutContent({
           </div>
         </section>
 
-        {/* Delivery Notes */}
+        {/* Delivery / Pickup Notes */}
         <section className="rounded-2xl border border-border bg-card p-6">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
             <Clock className="h-5 w-5 text-primary" />
-            Delivery Notes
+            {isPickup ? "Pickup notes" : "Delivery notes"}
           </h2>
 
           <Textarea
-            placeholder="Add any special instructions for delivery (e.g., gate code, landmark, preferred time)"
+            placeholder={
+              isPickup
+                ? "Add any special requests or preferred pickup time (optional)"
+                : "Add any special instructions for delivery (e.g., gate code, landmark, preferred time)"
+            }
             value={deliveryNotes}
             onChange={(e) => setDeliveryNotes(e.target.value)}
             className="min-h-[100px] resize-none"
@@ -237,10 +316,12 @@ export function CheckoutContent({
               <span>VAT (7.5%)</span>
               <span>₦{formatPrice(vat)}</span>
             </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>Delivery fee</span>
-              <span>₦{formatPrice(DELIVERY_FEE)}</span>
-            </div>
+            {!isPickup && (
+              <div className="flex justify-between text-muted-foreground">
+                <span>Delivery fee</span>
+                <span>₦{formatPrice(DELIVERY_FEE)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-semibold text-foreground text-lg pt-3 border-t border-border">
               <span>Total</span>
               <span>₦{formatPrice(total)}</span>
@@ -250,7 +331,7 @@ export function CheckoutContent({
           {/* Place Order Button */}
           <Button
             onClick={handlePlaceOrder}
-            disabled={isProcessing}
+            disabled={isProcessing || !canPlaceOrder}
             size="lg"
             className="w-full h-12 text-base font-semibold"
           >
