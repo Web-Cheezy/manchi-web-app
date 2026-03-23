@@ -1,20 +1,33 @@
 import Link from "next/link"
-import { CheckCircle, Home, ShoppingBag, Clock } from "lucide-react"
+import { CheckCircle, Home, ShoppingBag, Clock, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { CheckoutSuccessClearCart } from "@/components/checkout-success-clear-cart"
 import { getUser } from "@/lib/auth.server"
 import { getAddresses } from "@/lib/db/addresses.server"
 import { getProfileServer } from "@/lib/db/profiles.server"
 import { isPhoneMissing } from "@/lib/db/profiles"
 import { getFoods } from "@/lib/db"
+import { verifyAndCompleteOrder } from "@/lib/db/orders.server"
 
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ method?: string; location?: string }>
+  searchParams: Promise<{ method?: string; location?: string; reference?: string; trxref?: string }>
 }) {
-  const { method: methodParam, location: locationParam } = await searchParams
+  const params = await searchParams
+  const { method: methodParam, location: locationParam } = params
+  const paystackRef = params.reference ?? params.trxref
+
+  let paymentError: string | null = null
+  if (paystackRef) {
+    const result = await verifyAndCompleteOrder(paystackRef)
+    if (!result.ok) {
+      paymentError = result.error ?? "We could not confirm your payment."
+    }
+  }
+
   const isPickup = methodParam === "pickup"
   const storeLocation = locationParam === "Aurora" ? "Aurora Mall" : locationParam === "Chasemall" ? "Chasemall" : null
 
@@ -30,6 +43,7 @@ export default async function CheckoutSuccessPage({
 
   return (
     <div className="min-h-screen bg-background">
+      {paystackRef && !paymentError && <CheckoutSuccessClearCart />}
       <Header
         addresses={addresses}
         selectedAddress={defaultAddress}
@@ -46,11 +60,30 @@ export default async function CheckoutSuccessPage({
           </div>
 
           <h1 className="text-3xl font-bold text-foreground mb-3">
-            Order Placed Successfully!
+            {paymentError ? "Payment confirmation" : "Order placed successfully!"}
           </h1>
-          <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-            Thank you for your order. We've received it and will start preparing your delicious meal right away.
-          </p>
+          {paymentError ? (
+            <div className="mb-8 max-w-md mx-auto rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-left">
+              <div className="flex gap-2">
+                <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-foreground">We couldn&apos;t verify this payment</p>
+                  <p className="text-sm text-muted-foreground mt-1">{paymentError}</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    If you were charged, contact us at{" "}
+                    <a href="mailto:test@manchi.com" className="text-primary font-medium">
+                      test@manchi.com
+                    </a>{" "}
+                    with your reference: <code className="text-xs">{paystackRef}</code>
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+              Thank you for your order. We&apos;ve received it and will start preparing your delicious meal right away.
+            </p>
+          )}
 
           {/* Order Info Card */}
           <div className="rounded-2xl border border-border bg-card p-6 mb-8 text-left">

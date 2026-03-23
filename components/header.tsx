@@ -14,6 +14,7 @@ import {
   Home,
   UtensilsCrossed,
   Star,
+  Package,
   ChevronRight,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
@@ -100,6 +101,7 @@ export function Header({
                         {[
                           { href: "/", label: "Home", icon: Home },
                           { href: "/menu", label: "Our Menu", icon: UtensilsCrossed },
+                          { href: "/account/orders", label: "My Orders", icon: Package },
                           { href: "#popular", label: "Popular Dishes", icon: Star, isAnchor: true },
                         ].map((item) => {
                           const Icon = item.icon

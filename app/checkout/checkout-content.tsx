@@ -49,6 +49,7 @@ export function CheckoutContent({
   const [selectedAddressId, setSelectedAddressId] = useState(defaultAddressId)
   const [deliveryNotes, setDeliveryNotes] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -72,13 +73,48 @@ export function CheckoutContent({
 
   const handlePlaceOrder = async () => {
     setIsProcessing(true)
+    setPaymentError(null)
 
-    // TODO: Integrate with Paystack for payment; when creating order include:
-    // delivery_method, location: storeLocation, delivery_address, etc.
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      const callbackUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/checkout/success?method=${deliveryMethod}&location=${encodeURIComponent(storeLocation)}`
+          : undefined
 
-    clearCart()
-    router.push(`/checkout/success?method=${deliveryMethod}&location=${encodeURIComponent(storeLocation)}`)
+      const res = await fetch("/api/checkout/paystack", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cart_items: cart.items,
+          subtotal,
+          vat,
+          total,
+          delivery_method: deliveryMethod,
+          location: storeLocation,
+          delivery_address: isPickup ? null : (selectedAddress ? formatAddressFull(selectedAddress) : null),
+          delivery_notes: deliveryNotes || null,
+          callback_url: callbackUrl,
+        }),
+      })
+
+      const data = (await res.json().catch(() => null)) as null | {
+        authorization_url?: string
+        error?: string
+      }
+
+      if (!res.ok || !data?.authorization_url) {
+        setIsProcessing(false)
+        setPaymentError(data?.error || "Payment initialization failed. Please try again.")
+        return
+      }
+
+      // Cart is cleared on success page after payment (see CheckoutSuccessClearCart).
+      window.location.href = data.authorization_url
+    } catch {
+      setIsProcessing(false)
+      setPaymentError("Payment initialization failed. Please try again.")
+    }
   }
 
   return (
@@ -347,6 +383,12 @@ export function CheckoutContent({
               </>
             )}
           </Button>
+
+          {paymentError && (
+            <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {paymentError}
+            </div>
+          )}
 
           <p className="text-xs text-center text-muted-foreground">
             By placing this order, you agree to our{" "}

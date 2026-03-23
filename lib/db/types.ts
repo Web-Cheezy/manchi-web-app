@@ -87,6 +87,8 @@ export interface Order {
   location: string | null
   vat: number
   items: Json | null
+  /** Optional legacy column — web checkout links Paystack via initialize metadata.order_id instead */
+  paystack_reference?: string | null
   created_at: string
 }
 
