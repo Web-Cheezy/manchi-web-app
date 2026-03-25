@@ -25,10 +25,14 @@ import { useCart } from "@/lib/cart"
 import { formatAddressFull } from "@/lib/db/addresses"
 import { formatPrice } from "@/lib/format"
 import type { Address } from "@/lib/db/types"
+import {
+  BASE_TRANSPORT_FEE_NAIRA,
+  isServedRegion,
+  servedRegionErrorMessage,
+} from "@/lib/delivery/served-regions"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=100&h=100&fit=crop&q=80"
 const VAT_RATE = 0.075
-const DELIVERY_FEE = 1500
 
 interface CheckoutContentProps {
   addresses: Address[]
@@ -66,14 +70,22 @@ export function CheckoutContent({
   const isPickup = deliveryMethod === "pickup"
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0]
   const hasValidAddress = !isPickup && selectedAddress
+  const addressInServedRegion =
+    isPickup || !selectedAddress || isServedRegion(selectedAddress.state, selectedAddress.lga)
   const vat = Math.round(subtotal * VAT_RATE)
-  const deliveryFee = isPickup ? 0 : DELIVERY_FEE
+  const deliveryFee = isPickup ? 0 : BASE_TRANSPORT_FEE_NAIRA
   const total = subtotal + vat + deliveryFee
-  const canPlaceOrder = isPickup || hasValidAddress
+  const canPlaceOrder = isPickup || (hasValidAddress && addressInServedRegion)
 
   const handlePlaceOrder = async () => {
     setIsProcessing(true)
     setPaymentError(null)
+
+    if (!isPickup && selectedAddress && !isServedRegion(selectedAddress.state, selectedAddress.lga)) {
+      setPaymentError(servedRegionErrorMessage())
+      setIsProcessing(false)
+      return
+    }
 
     try {
       const callbackUrl =
@@ -227,6 +239,18 @@ export function CheckoutContent({
             ))}
           </RadioGroup>
             )}
+
+            {selectedAddress && !isServedRegion(selectedAddress.state, selectedAddress.lga) && (
+              <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                <span>{servedRegionErrorMessage()} </span>
+                <Link
+                  href="/account/addresses"
+                  className="font-medium text-destructive underline underline-offset-2 hover:opacity-90"
+                >
+                  Update your address
+                </Link>
+              </div>
+            )}
           </section>
         )}
 
@@ -354,8 +378,8 @@ export function CheckoutContent({
             </div>
             {!isPickup && (
               <div className="flex justify-between text-muted-foreground">
-                <span>Delivery fee</span>
-                <span>₦{formatPrice(DELIVERY_FEE)}</span>
+                <span>Transport fee</span>
+                <span>₦{formatPrice(BASE_TRANSPORT_FEE_NAIRA)}</span>
               </div>
             )}
             <div className="flex justify-between font-semibold text-foreground text-lg pt-3 border-t border-border">

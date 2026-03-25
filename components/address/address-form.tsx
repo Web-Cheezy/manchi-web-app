@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { MapPin, Navigation, Loader2, CheckCircle, AlertCircle, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,7 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { Address, AddressInput } from "@/lib/db/types"
-import { nigeriaStates, getLgasByState } from "@/lib/data/nigeria-locations"
+import {
+  BASE_TRANSPORT_FEE_NAIRA,
+  getServedLgasForState,
+  getServedStateNames,
+  isServedRegion,
+  normalizeToServedStateAndLga,
+  servedRegionErrorMessage,
+} from "@/lib/delivery/served-regions"
+import { formatPrice } from "@/lib/format"
 
 interface AddressFormProps {
   address?: Address | null
@@ -50,17 +58,44 @@ export function AddressForm({ address, onSubmit, onCancel, isLoading = false }: 
   })
   const [error, setError] = useState<string | null>(null)
 
-  const availableLgas = formData.state ? getLgasByState(formData.state) : []
-
-  // Reset LGA when state changes
-  useEffect(() => {
-    if (formData.state && !isEditing) {
-      const lgas = getLgasByState(formData.state)
-      if (lgas.length > 0 && !lgas.includes(formData.lga)) {
-        setFormData(prev => ({ ...prev, lga: "" }))
-      }
+  const servedStates = useMemo(() => {
+    const names = getServedStateNames()
+    if (isEditing && address?.state && !names.some((n) => n.toLowerCase() === address.state.toLowerCase())) {
+      return [...names, address.state].sort((a, b) => a.localeCompare(b))
     }
-  }, [formData.state, formData.lga, isEditing])
+    return names
+  }, [isEditing, address?.state])
+
+  const availableLgas = useMemo(() => {
+    if (!formData.state) return []
+    const served = getServedLgasForState(formData.state)
+    if (
+      isEditing &&
+      address?.lga &&
+      address.state &&
+      formData.state.toLowerCase() === address.state.toLowerCase() &&
+      !served.some((l) => l.toLowerCase() === address.lga.toLowerCase())
+    ) {
+      return [address.lga, ...served]
+    }
+    return served
+  }, [formData.state, isEditing, address?.lga, address?.state])
+
+  // Reset LGA when state changes and current LGA is not in the new list
+  useEffect(() => {
+    if (!formData.state) return
+    const lgas = getServedLgasForState(formData.state)
+    if (lgas.length === 0) return
+    const ok =
+      lgas.some((l) => l.toLowerCase() === formData.lga.toLowerCase()) ||
+      (isEditing &&
+        address?.lga &&
+        formData.state.toLowerCase() === address.state?.toLowerCase() &&
+        formData.lga.toLowerCase() === address.lga.toLowerCase())
+    if (!ok && !isEditing) {
+      setFormData((prev) => ({ ...prev, lga: "" }))
+    }
+  }, [formData.state, formData.lga, isEditing, address?.lga, address?.state])
 
   const handleChange = (field: keyof AddressInput, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -101,11 +136,20 @@ export function AddressForm({ address, onSubmit, onCancel, isLoading = false }: 
             formatted: data.display_name || "",
           }
           
+          const served = normalizeToServedStateAndLga(detected.state, detected.lga)
+          if (!served) {
+            setLocationError(
+              "This location is outside Manchi's delivery LGAs. Please enter your address manually and pick a served state and LGA."
+            )
+            setMode("manual")
+            return
+          }
+
           setDetectedAddress(detected)
           setFormData(prev => ({
             ...prev,
-            state: detected.state,
-            lga: detected.lga,
+            state: served.state,
+            lga: served.lga,
             area: detected.area,
             street: detected.street,
           }))
@@ -150,6 +194,11 @@ export function AddressForm({ address, onSubmit, onCancel, isLoading = false }: 
       return
     }
 
+    if (!isServedRegion(formData.state, formData.lga)) {
+      setError(servedRegionErrorMessage())
+      return
+    }
+
     try {
       await onSubmit(formData)
     } catch (err) {
@@ -170,6 +219,10 @@ export function AddressForm({ address, onSubmit, onCancel, isLoading = false }: 
           <h3 className="text-lg font-semibold text-foreground">Add Delivery Address</h3>
           <p className="text-sm text-muted-foreground mt-1">
             How would you like to add your address?
+          </p>
+          <p className="text-xs text-muted-foreground mt-3 max-w-sm mx-auto">
+            Delivery is available only in Manchi&apos;s listed LGAs. Base transport fee: ₦
+            {formatPrice(BASE_TRANSPORT_FEE_NAIRA)}.
           </p>
         </div>
 
@@ -300,6 +353,10 @@ export function AddressForm({ address, onSubmit, onCancel, isLoading = false }: 
         />
       </div>
 
+      <p className="text-xs text-muted-foreground">
+        Only states and LGAs we deliver to are shown. Base transport fee: ₦{formatPrice(BASE_TRANSPORT_FEE_NAIRA)}.
+      </p>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="state">State *</Label>
@@ -312,9 +369,9 @@ export function AddressForm({ address, onSubmit, onCancel, isLoading = false }: 
               <SelectValue placeholder="Select state" />
             </SelectTrigger>
             <SelectContent>
-              {nigeriaStates.map((state) => (
-                <SelectItem key={state.name} value={state.name}>
-                  {state.name}
+              {servedStates.map((name) => (
+                <SelectItem key={name} value={name}>
+                  {name}
                 </SelectItem>
               ))}
             </SelectContent>

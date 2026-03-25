@@ -56,6 +56,20 @@ export async function getAddressById(id: string): Promise<Address | null> {
   return data as Address
 }
 
+/** Single address row scoped to user (for API validation) */
+export async function getAddressByIdForUser(id: string, userId: string): Promise<Address | null> {
+  const supabase = await getDbForAddresses()
+  const { data, error } = await supabase
+    .from("addresses")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (error || !data) return null
+  return data as Address
+}
+
 export async function createAddressForUser(input: {
   userId: string
   title?: string | null

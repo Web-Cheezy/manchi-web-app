@@ -27,10 +27,10 @@ import {
 import { useCart } from "@/lib/cart"
 import { formatPrice } from "@/lib/format"
 import type { CartItem } from "@/lib/db/types"
+import { BASE_TRANSPORT_FEE_NAIRA } from "@/lib/delivery/served-regions"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=200&h=200&fit=crop&q=80"
 const VAT_RATE = 0.075 // 7.5% VAT
-const DELIVERY_FEE = 1500 // Fixed delivery fee in Naira
 
 interface CartContentProps {
   userId: string | null
@@ -57,7 +57,7 @@ export function CartContent({ userId, profileIncomplete, hasAddress }: CartConte
   }
 
   const isPickup = deliveryMethod === "pickup"
-  const deliveryFee = isPickup ? 0 : DELIVERY_FEE
+  const deliveryFee = isPickup ? 0 : BASE_TRANSPORT_FEE_NAIRA
   const vat = Math.round(subtotal * VAT_RATE)
   const total = subtotal + vat + deliveryFee
 
@@ -140,8 +140,8 @@ export function CartContent({ userId, profileIncomplete, hasAddress }: CartConte
             </div>
             {!isPickup && (
               <div className="flex justify-between text-muted-foreground">
-                <span>Delivery fee</span>
-                <span>₦{formatPrice(DELIVERY_FEE)}</span>
+                <span>Transport fee</span>
+                <span>₦{formatPrice(BASE_TRANSPORT_FEE_NAIRA)}</span>
               </div>
             )}
             <div className="flex justify-between font-semibold text-foreground text-base pt-3 border-t border-border">

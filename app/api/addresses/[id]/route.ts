@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { resolveApiUserId } from "@/lib/api-auth"
-import { deleteAddressForUser, updateAddressForUser } from "@/lib/db/addresses.server"
+import { deleteAddressForUser, getAddressByIdForUser, updateAddressForUser } from "@/lib/db/addresses.server"
+import { isServedRegion, servedRegionErrorMessage } from "@/lib/delivery/served-regions"
 
 type Payload = {
   user_id?: string
@@ -23,6 +24,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { userId, error: authError } = await resolveApiUserId(req, body.user_id ?? body.userId)
   if (!userId || authError) {
     return NextResponse.json({ error: authError ?? "Unauthorized" }, { status: 401 })
+  }
+
+  const existing = await getAddressByIdForUser(id, userId)
+  if (!existing) {
+    return NextResponse.json({ error: "Address not found." }, { status: 404 })
+  }
+
+  const nextState = body.state ?? existing.state
+  const nextLga = body.lga ?? existing.lga
+  if (body.state !== undefined || body.lga !== undefined) {
+    if (!isServedRegion(nextState, nextLga)) {
+      return NextResponse.json({ error: servedRegionErrorMessage() }, { status: 400 })
+    }
   }
 
   const updated = await updateAddressForUser({

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { resolveApiUserId } from "@/lib/api-auth"
 import { createAddressForUser } from "@/lib/db/addresses.server"
+import { isServedRegion, servedRegionErrorMessage } from "@/lib/delivery/served-regions"
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as
@@ -28,6 +29,10 @@ export async function POST(req: Request) {
 
   if (!body.state || !body.lga || !body.area || !body.street || !body.house_number) {
     return NextResponse.json({ error: "Missing required address fields." }, { status: 400 })
+  }
+
+  if (!isServedRegion(body.state, body.lga)) {
+    return NextResponse.json({ error: servedRegionErrorMessage() }, { status: 400 })
   }
 
   const created = await createAddressForUser({
