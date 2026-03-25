@@ -5,6 +5,16 @@
 
 export type Json = string | number | boolean | null | Json[] | { [key: string]: Json }
 
+// ─── transport_prices ─────────────────────────────────────────────────────
+/** Per-LGA delivery transport fee (`public.transport_prices`, PK: lga). */
+export interface TransportPrice {
+  lga: string
+  state: string
+  price: number
+  created_at: string
+  updated_at: string
+}
+
 // ─── addresses ─────────────────────────────────────────────────────────────
 export interface Address {
   id: string

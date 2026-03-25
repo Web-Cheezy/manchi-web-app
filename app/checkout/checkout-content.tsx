@@ -25,11 +25,7 @@ import { useCart } from "@/lib/cart"
 import { formatAddressFull } from "@/lib/db/addresses"
 import { formatPrice } from "@/lib/format"
 import type { Address } from "@/lib/db/types"
-import {
-  BASE_TRANSPORT_FEE_NAIRA,
-  isServedRegion,
-  servedRegionErrorMessage,
-} from "@/lib/delivery/served-regions"
+import { isServedRegion, servedRegionErrorMessage } from "@/lib/delivery/served-regions"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=100&h=100&fit=crop&q=80"
 const VAT_RATE = 0.075
@@ -37,6 +33,8 @@ const VAT_RATE = 0.075
 interface CheckoutContentProps {
   addresses: Address[]
   defaultAddressId: string
+  /** Server-resolved fee for default address; client refetches when selection changes. */
+  initialTransportFeeNaira: number
   userEmail: string
   userPhone: string
 }
@@ -44,6 +42,7 @@ interface CheckoutContentProps {
 export function CheckoutContent({
   addresses,
   defaultAddressId,
+  initialTransportFeeNaira,
   userEmail,
   userPhone,
 }: CheckoutContentProps) {
@@ -54,10 +53,39 @@ export function CheckoutContent({
   const [deliveryNotes, setDeliveryNotes] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [transportFee, setTransportFee] = useState(initialTransportFeeNaira)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    setSelectedAddressId(defaultAddressId)
+  }, [defaultAddressId])
+
+  useEffect(() => {
+    if (!mounted) return
+    if (deliveryMethod === "pickup") {
+      setTransportFee(0)
+      return
+    }
+    const addr = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0]
+    if (!addr) {
+      setTransportFee(0)
+      return
+    }
+    let cancelled = false
+    const qs = new URLSearchParams({ lga: addr.lga, state: addr.state })
+    fetch(`/api/transport-price?${qs}`)
+      .then((r) => r.json())
+      .then((d: { price?: number }) => {
+        if (!cancelled && typeof d.price === "number") setTransportFee(d.price)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [mounted, deliveryMethod, selectedAddressId, addresses])
 
   if (!mounted) {
     return <CheckoutSkeleton />
@@ -73,7 +101,7 @@ export function CheckoutContent({
   const addressInServedRegion =
     isPickup || !selectedAddress || isServedRegion(selectedAddress.state, selectedAddress.lga)
   const vat = Math.round(subtotal * VAT_RATE)
-  const deliveryFee = isPickup ? 0 : BASE_TRANSPORT_FEE_NAIRA
+  const deliveryFee = isPickup ? 0 : transportFee
   const total = subtotal + vat + deliveryFee
   const canPlaceOrder = isPickup || (hasValidAddress && addressInServedRegion)
 
@@ -105,6 +133,7 @@ export function CheckoutContent({
           delivery_method: deliveryMethod,
           location: storeLocation,
           delivery_address: isPickup ? null : (selectedAddress ? formatAddressFull(selectedAddress) : null),
+          delivery_address_id: isPickup ? null : (selectedAddress?.id ?? null),
           delivery_notes: deliveryNotes || null,
           callback_url: callbackUrl,
         }),
@@ -379,7 +408,7 @@ export function CheckoutContent({
             {!isPickup && (
               <div className="flex justify-between text-muted-foreground">
                 <span>Transport fee</span>
-                <span>₦{formatPrice(BASE_TRANSPORT_FEE_NAIRA)}</span>
+                <span>₦{formatPrice(deliveryFee)}</span>
               </div>
             )}
             <div className="flex justify-between font-semibold text-foreground text-lg pt-3 border-t border-border">

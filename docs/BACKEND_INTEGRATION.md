@@ -31,6 +31,8 @@ Body: same JSON as the web client, plus:
 
 - `userId` or `user_id` — Supabase auth user id (the app should already know this after login).
 - `email` — required for Paystack (web gets it from session).
+- **`subtotal`**, **`vat`**, **`total`** — the server recomputes VAT and transport from **`subtotal`** and **`public.transport_prices`** (by LGA), then checks your `total` / `vat` match (within a small tolerance). If they do not, the request is rejected—refresh pricing after changing the cart or address.
+- **Delivery:** either **`delivery_address_id`** (a row in `addresses` for that user) **or** **`delivery_lga`** + **`delivery_state`** (must be a served LGA). **`delivery_address`** (full string) is still required for the order record.
 
 Example:
 
@@ -39,12 +41,14 @@ Example:
   "userId": "uuid-here",
   "email": "user@example.com",
   "cart_items": [ ... ],
-  "total": 5000,
-  "vat": 375,
   "subtotal": 4125,
+  "vat": 375,
+  "total": 10600,
   "delivery_method": "delivery",
   "location": "Chasemall",
   "delivery_address": "Full address string",
+  "delivery_lga": "Port Harcourt",
+  "delivery_state": "Rivers",
   "delivery_notes": null,
   "callback_url": "https://your-app.com/checkout/success?..."
 }

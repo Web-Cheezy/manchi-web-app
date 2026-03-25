@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server"
 import { resolveApiUserId } from "@/lib/api-auth"
+import { getAddressByIdForUser } from "@/lib/db/addresses.server"
 import { createOrder } from "@/lib/db/orders.server"
+import { resolveTransportFeeNaira } from "@/lib/db/transport-prices.server"
 import type { CartItem, DeliveryMethod, StoreLocation } from "@/lib/db/types"
+import { isServedRegion, servedRegionErrorMessage } from "@/lib/delivery/served-regions"
 import { nairaToKobo } from "@/lib/paystack.server"
+
+const CHECKOUT_VAT_RATE = 0.075
 
 export async function POST(req: Request) {
   const secretKey = process.env.PAYSTACK_SECRET_KEY
@@ -18,6 +23,11 @@ export async function POST(req: Request) {
     delivery_method?: DeliveryMethod
     location?: StoreLocation
     delivery_address?: string | null
+    /** Saved address id (web); server resolves LGA for `transport_prices`. */
+    delivery_address_id?: string | null
+    /** Mobile / API clients without saved row: must match a served LGA. */
+    delivery_lga?: string | null
+    delivery_state?: string | null
     delivery_notes?: string | null
     callback_url?: string
     /** Mobile / API key clients: same as your backend docs */
@@ -50,10 +60,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Your cart is empty." }, { status: 400 })
   }
 
-  const total = body.total
-  const vat = body.vat
-  if (typeof total !== "number" || total <= 0 || typeof vat !== "number" || vat < 0) {
-    return NextResponse.json({ error: "Invalid order totals." }, { status: 400 })
+  const subtotal = body.subtotal
+  if (typeof subtotal !== "number" || subtotal <= 0) {
+    return NextResponse.json({ error: "Invalid subtotal." }, { status: 400 })
   }
 
   const delivery_method = body.delivery_method
@@ -70,13 +79,62 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Delivery address is required for delivery." }, { status: 400 })
   }
 
-  const amountKobo = nairaToKobo(total)
+  let transportNaira = 0
+  if (delivery_method === "delivery") {
+    let lga: string | null = null
+    let state: string | null = null
+
+    const addrId = body.delivery_address_id?.trim()
+    if (addrId) {
+      const addr = await getAddressByIdForUser(addrId, userId)
+      if (!addr) {
+        return NextResponse.json({ error: "Invalid delivery address." }, { status: 400 })
+      }
+      lga = addr.lga
+      state = addr.state
+    } else if (body.delivery_lga?.trim() && body.delivery_state?.trim()) {
+      lga = body.delivery_lga.trim()
+      state = body.delivery_state.trim()
+    } else {
+      return NextResponse.json(
+        {
+          error:
+            "Delivery checkout requires delivery_address_id (saved address) or delivery_lga and delivery_state (API clients).",
+        },
+        { status: 400 }
+      )
+    }
+
+    if (!isServedRegion(state, lga)) {
+      return NextResponse.json({ error: servedRegionErrorMessage() }, { status: 400 })
+    }
+
+    transportNaira = await resolveTransportFeeNaira(lga, state)
+  }
+
+  const expectedVat = Math.round(subtotal * CHECKOUT_VAT_RATE)
+  const expectedTotal = subtotal + expectedVat + transportNaira
+
+  const clientTotal = body.total
+  const clientVat = body.vat
+  if (typeof clientTotal !== "number" || clientTotal <= 0 || typeof clientVat !== "number" || clientVat < 0) {
+    return NextResponse.json({ error: "Invalid order totals." }, { status: 400 })
+  }
+
+  if (Math.abs(expectedTotal - clientTotal) > 2 || Math.abs(expectedVat - clientVat) > 2) {
+    return NextResponse.json(
+      { error: "Order total does not match server pricing (transport from database). Refresh checkout and try again." },
+      { status: 400 }
+    )
+  }
+
+  const amountKobo = nairaToKobo(expectedTotal)
 
   // 1) Create order first (same schema as mobile — no paystack_reference column required).
   const created = await createOrder({
     user_id: userId,
-    total_amount: total,
-    vat,
+    total_amount: expectedTotal,
+    vat: expectedVat,
     delivery_method,
     delivery_address: body.delivery_address?.trim() ?? null,
     location,

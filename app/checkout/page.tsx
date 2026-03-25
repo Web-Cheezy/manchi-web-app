@@ -6,6 +6,7 @@ import { getAddresses } from "@/lib/db/addresses.server"
 import { getProfileServer } from "@/lib/db/profiles.server"
 import { isPhoneMissing } from "@/lib/db/profiles"
 import { getFoods } from "@/lib/db"
+import { resolveTransportFeeNaira } from "@/lib/db/transport-prices.server"
 import { CheckoutContent } from "./checkout-content"
 
 export default async function CheckoutPage() {
@@ -30,6 +31,9 @@ export default async function CheckoutPage() {
   // Allow checkout with no addresses when user chooses pickup (handled in client)
   const defaultAddress = addresses.find((a) => a.is_default) ?? addresses[0]
   const defaultAddressId = defaultAddress?.id ?? ""
+  const initialTransportFeeNaira = defaultAddress
+    ? await resolveTransportFeeNaira(defaultAddress.lga, defaultAddress.state)
+    : 0
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,6 +50,7 @@ export default async function CheckoutPage() {
         <CheckoutContent
           addresses={addresses}
           defaultAddressId={defaultAddressId}
+          initialTransportFeeNaira={initialTransportFeeNaira}
           userEmail={user.email ?? ""}
           userPhone={profile?.phone || profile?.phone_number || ""}
         />

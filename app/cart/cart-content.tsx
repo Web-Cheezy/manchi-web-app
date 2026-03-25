@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -27,7 +27,6 @@ import {
 import { useCart } from "@/lib/cart"
 import { formatPrice } from "@/lib/format"
 import type { CartItem } from "@/lib/db/types"
-import { BASE_TRANSPORT_FEE_NAIRA } from "@/lib/delivery/served-regions"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=200&h=200&fit=crop&q=80"
 const VAT_RATE = 0.075 // 7.5% VAT
@@ -36,17 +35,58 @@ interface CartContentProps {
   userId: string | null
   profileIncomplete: boolean
   hasAddress: boolean
+  defaultTransportFeeNaira: number
+  defaultAddressLga: string | null
+  defaultAddressState: string | null
 }
 
-export function CartContent({ userId, profileIncomplete, hasAddress }: CartContentProps) {
+export function CartContent({
+  userId,
+  profileIncomplete,
+  hasAddress,
+  defaultTransportFeeNaira,
+  defaultAddressLga,
+  defaultAddressState,
+}: CartContentProps) {
   const { cart, itemCount, subtotal, removeFromCart, updateQuantity, clearCart, getItemTotal, deliveryMethod } = useCart()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const [transportFee, setTransportFee] = useState(defaultTransportFeeNaira)
 
-  // Handle hydration
-  useState(() => {
+  useEffect(() => {
     setMounted(true)
-  })
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    if (deliveryMethod === "pickup") {
+      setTransportFee(0)
+      return
+    }
+    if (!hasAddress || !defaultAddressLga || !defaultAddressState) {
+      setTransportFee(defaultTransportFeeNaira)
+      return
+    }
+    setTransportFee(defaultTransportFeeNaira)
+    let cancelled = false
+    const qs = new URLSearchParams({ lga: defaultAddressLga, state: defaultAddressState })
+    fetch(`/api/transport-price?${qs}`)
+      .then((r) => r.json())
+      .then((d: { price?: number }) => {
+        if (!cancelled && typeof d.price === "number") setTransportFee(d.price)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [
+    mounted,
+    deliveryMethod,
+    hasAddress,
+    defaultAddressLga,
+    defaultAddressState,
+    defaultTransportFeeNaira,
+  ])
 
   if (!mounted) {
     return <CartSkeleton />
@@ -57,7 +97,7 @@ export function CartContent({ userId, profileIncomplete, hasAddress }: CartConte
   }
 
   const isPickup = deliveryMethod === "pickup"
-  const deliveryFee = isPickup ? 0 : BASE_TRANSPORT_FEE_NAIRA
+  const deliveryFee = isPickup ? 0 : transportFee
   const vat = Math.round(subtotal * VAT_RATE)
   const total = subtotal + vat + deliveryFee
 
@@ -141,7 +181,7 @@ export function CartContent({ userId, profileIncomplete, hasAddress }: CartConte
             {!isPickup && (
               <div className="flex justify-between text-muted-foreground">
                 <span>Transport fee</span>
-                <span>₦{formatPrice(BASE_TRANSPORT_FEE_NAIRA)}</span>
+                <span>₦{formatPrice(deliveryFee)}</span>
               </div>
             )}
             <div className="flex justify-between font-semibold text-foreground text-base pt-3 border-t border-border">
