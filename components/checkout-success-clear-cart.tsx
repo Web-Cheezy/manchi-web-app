@@ -1,18 +1,23 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { useCart } from "@/lib/cart"
 
-/** Clears local cart once after returning from Paystack (order is stored in DB). */
-export function CheckoutSuccessClearCart() {
+/**
+ * Clears the browser cart only after Paystack return + server verification succeeded.
+ * Industry pattern: never clear before payment is confirmed; use sessionStorage so refresh
+ * does not double-run logic (cart is already empty after first clear).
+ */
+export function CheckoutSuccessClearCart({ paymentReference }: { paymentReference: string }) {
   const { clearCart } = useCart()
-  const didRun = useRef(false)
 
   useEffect(() => {
-    if (didRun.current) return
-    didRun.current = true
+    if (typeof window === "undefined" || !paymentReference) return
+    const key = `manchi_cart_cleared_${paymentReference}`
+    if (sessionStorage.getItem(key)) return
+    sessionStorage.setItem(key, "1")
     clearCart()
-  }, [clearCart])
+  }, [clearCart, paymentReference])
 
   return null
 }

@@ -51,8 +51,6 @@ export default async function CheckoutPage() {
           addresses={addresses}
           defaultAddressId={defaultAddressId}
           initialTransportFeeNaira={initialTransportFeeNaira}
-          userEmail={user.email ?? ""}
-          userPhone={profile?.phone || profile?.phone_number || ""}
         />
       </main>
 

@@ -25,6 +25,11 @@ import { useCart } from "@/lib/cart"
 import { formatAddressFull } from "@/lib/db/addresses"
 import { formatPrice } from "@/lib/format"
 import type { Address } from "@/lib/db/types"
+import {
+  CHECKOUT_PUBLIC_EMAIL,
+  CHECKOUT_PUBLIC_PHONE_DISPLAY,
+  CHECKOUT_PUBLIC_PHONE_TEL,
+} from "@/lib/checkout/public-contact"
 import { isServedRegion, servedRegionErrorMessage } from "@/lib/delivery/served-regions"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=100&h=100&fit=crop&q=80"
@@ -35,16 +40,12 @@ interface CheckoutContentProps {
   defaultAddressId: string
   /** Server-resolved fee for default address; client refetches when selection changes. */
   initialTransportFeeNaira: number
-  userEmail: string
-  userPhone: string
 }
 
 export function CheckoutContent({
   addresses,
   defaultAddressId,
   initialTransportFeeNaira,
-  userEmail,
-  userPhone,
 }: CheckoutContentProps) {
   const { cart, itemCount, subtotal, getItemTotal, clearCart, deliveryMethod, storeLocation, setStoreLocation } = useCart()
   const router = useRouter()
@@ -296,21 +297,25 @@ export function CheckoutContent({
           </section>
         )}
 
-        {/* Contact Info */}
+        {/* Contact Info — restaurant (not customer profile) */}
         <section className="rounded-2xl border border-border bg-card p-6">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
             <Phone className="h-5 w-5 text-primary" />
-            Contact Information
+            Contact Info
           </h2>
 
           <div className="space-y-3 text-sm">
             <div className="flex items-center gap-3 text-muted-foreground">
               <Mail className="h-4 w-4 shrink-0" />
-              <span>{userEmail}</span>
+              <a href={`mailto:${CHECKOUT_PUBLIC_EMAIL}`} className="text-primary hover:underline">
+                {CHECKOUT_PUBLIC_EMAIL}
+              </a>
             </div>
             <div className="flex items-center gap-3 text-muted-foreground">
               <Phone className="h-4 w-4 shrink-0" />
-              <span>{userPhone}</span>
+              <a href={`tel:${CHECKOUT_PUBLIC_PHONE_TEL}`} className="text-primary hover:underline">
+                {CHECKOUT_PUBLIC_PHONE_DISPLAY}
+              </a>
             </div>
           </div>
         </section>

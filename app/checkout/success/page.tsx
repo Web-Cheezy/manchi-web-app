@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { CheckCircle, Home, ShoppingBag, Clock, AlertTriangle } from "lucide-react"
+import { CheckCircle, Home, ShoppingBag, Clock, AlertTriangle, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -28,6 +28,10 @@ export default async function CheckoutSuccessPage({
     }
   }
 
+  const paymentVerified = Boolean(paystackRef && !paymentError)
+  const paymentDeclined = Boolean(paystackRef && paymentError)
+  const missingPaystackReference = !paystackRef
+
   const isPickup = methodParam === "pickup"
   const storeLocation = locationParam === "Aurora" ? "Aurora Mall" : locationParam === "Chasemall" ? "Chasemall" : null
 
@@ -43,7 +47,7 @@ export default async function CheckoutSuccessPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {paystackRef && !paymentError && <CheckoutSuccessClearCart />}
+      {paymentVerified && paystackRef && <CheckoutSuccessClearCart paymentReference={paystackRef} />}
       <Header
         addresses={addresses}
         selectedAddress={defaultAddress}
@@ -54,15 +58,41 @@ export default async function CheckoutSuccessPage({
 
       <main className="max-w-2xl mx-auto px-4 lg:px-0 py-16">
         <div className="text-center">
-          {/* Success Icon */}
-          <div className="mx-auto w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-6">
-            <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
+          {/* Icon: success / declined / incomplete return */}
+          <div
+            className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6 ${
+              paymentVerified
+                ? "bg-green-100 dark:bg-green-900/30"
+                : paymentDeclined
+                  ? "bg-destructive/10"
+                  : "bg-muted"
+            }`}
+          >
+            {paymentVerified ? (
+              <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
+            ) : paymentDeclined ? (
+              <AlertTriangle className="h-10 w-10 text-destructive" />
+            ) : (
+              <HelpCircle className="h-10 w-10 text-muted-foreground" />
+            )}
           </div>
 
           <h1 className="text-3xl font-bold text-foreground mb-3">
-            {paymentError ? "Payment confirmation" : "Order placed successfully!"}
+            {paymentVerified
+              ? "Order placed successfully!"
+              : paymentDeclined
+                ? "Payment not completed"
+                : "No payment session"}
           </h1>
-          {paymentError ? (
+
+          {missingPaystackReference && (
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+              This page is shown after Paystack redirects back with a payment reference. If you opened this link
+              directly, your cart is unchanged. Return to checkout to pay, or continue shopping.
+            </p>
+          )}
+
+          {paymentDeclined && paystackRef && (
             <div className="mb-8 max-w-md mx-auto rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-left">
               <div className="flex gap-2">
                 <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
@@ -70,7 +100,7 @@ export default async function CheckoutSuccessPage({
                   <p className="font-medium text-foreground">We couldn&apos;t verify this payment</p>
                   <p className="text-sm text-muted-foreground mt-1">{paymentError}</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    If you were charged, contact us at{" "}
+                    Your cart is still available. If you were charged, contact us at{" "}
                     <a href="mailto:test@manchi.com" className="text-primary font-medium">
                       test@manchi.com
                     </a>{" "}
@@ -79,13 +109,16 @@ export default async function CheckoutSuccessPage({
                 </div>
               </div>
             </div>
-          ) : (
+          )}
+
+          {paymentVerified && (
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
               Thank you for your order. We&apos;ve received it and will start preparing your delicious meal right away.
             </p>
           )}
 
-          {/* Order Info Card */}
+          {/* Order Info Card — only after verified payment */}
+          {paymentVerified && (
           <div className="rounded-2xl border border-border bg-card p-6 mb-8 text-left">
             <h2 className="font-semibold text-foreground mb-4">What happens next?</h2>
             <div className="space-y-4">
@@ -144,16 +177,27 @@ export default async function CheckoutSuccessPage({
               </div>
             </div>
           </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild size="lg">
-              <Link href="/account/orders">
-                <ShoppingBag className="mr-2 h-5 w-5" />
-                View My Orders
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
+            {paymentVerified && (
+              <Button asChild size="lg">
+                <Link href="/account/orders">
+                  <ShoppingBag className="mr-2 h-5 w-5" />
+                  View My Orders
+                </Link>
+              </Button>
+            )}
+            {(missingPaystackReference || paymentDeclined) && (
+              <Button asChild size="lg" variant={paymentDeclined ? "default" : "outline"}>
+                <Link href="/checkout">
+                  <ShoppingBag className="mr-2 h-5 w-5" />
+                  Back to checkout
+                </Link>
+              </Button>
+            )}
+            <Button asChild variant={paymentVerified ? "outline" : "default"} size="lg">
               <Link href="/">
                 <Home className="mr-2 h-5 w-5" />
                 Back to Home
