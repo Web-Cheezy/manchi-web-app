@@ -1,1 +1,1 @@
-export { CartProvider, useCart } from "./cart-context"
+export { CartProvider, useCart, CART_STORAGE_KEY } from "./cart-context"

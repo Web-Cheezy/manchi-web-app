@@ -12,7 +12,8 @@ import {
 import type { Cart, CartItem, CartSideItem } from "@/lib/db/types"
 import type { DeliveryMethod, StoreLocation } from "@/lib/db/types"
 
-const CART_STORAGE_KEY = "manchi-cart"
+/** Exported so checkout success can clear storage in sync with context (avoids load-after-clear races). */
+export const CART_STORAGE_KEY = "manchi-cart"
 const DELIVERY_METHOD_STORAGE_KEY = "manchi-delivery-method"
 const STORE_LOCATION_STORAGE_KEY = "manchi-store-location"
 
