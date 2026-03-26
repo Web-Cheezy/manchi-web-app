@@ -2,7 +2,7 @@ import "server-only"
 import { nairaToKobo } from "@/lib/paystack.server"
 import { getServerClient } from "./server"
 import { getSupabaseAdmin, hasServiceRoleKey } from "./supabase-admin"
-import type { CartItem, DeliveryMethod, Order, StoreLocation } from "./types"
+import type { DeliveryMethod, Order, StoreLocation } from "./types"
 
 /** Prefer service role (same as mobile API) so RLS does not block inserts/updates. */
 async function getDbForOrders() {
@@ -12,10 +12,19 @@ async function getDbForOrders() {
   return await getServerClient()
 }
 
-export type OrderItemsPayload = {
-  cart_items: CartItem[]
-  delivery_notes: string | null
+export type BackendCartItem = {
+  name: string
+  food_id: number | null
+  options: unknown[]
+  side_id: number | null
+  quantity: number
+  image_url: string | null
+  item_type: string
+  price_at_time: number
 }
+
+// Backend-expected shape for order items (array of normalized item objects).
+export type OrderItemsPayload = BackendCartItem[]
 
 /** List orders for the current user (newest first) */
 export async function getOrdersForUser(userId: string): Promise<Order[]> {

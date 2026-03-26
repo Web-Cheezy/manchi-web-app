@@ -12,16 +12,28 @@ export const metadata = {
   description: "View your order history",
 }
 
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({ order, displayIndex }: { order: Order; displayIndex: number }) {
   const date = new Date(order.created_at)
-  const items = order.items as { cart_items?: unknown[] } | null
-  const lineCount = Array.isArray(items?.cart_items) ? items.cart_items.length : 0
+  const itemsJson = order.items as unknown
+  const cartItems = Array.isArray(itemsJson)
+    ? itemsJson
+    : (itemsJson && typeof itemsJson === "object" && "cart_items" in itemsJson
+        ? (itemsJson as { cart_items?: unknown[] } | null)?.cart_items
+        : undefined) ?? []
+  const lineCount = Array.isArray(cartItems) ? cartItems.length : 0
+
+  const firstItem = Array.isArray(cartItems) ? cartItems[0] as any : null
+  const previewName = firstItem?.name ?? firstItem?.foodName ?? "Item"
+  const previewImage = firstItem?.image_url ?? firstItem?.foodImage ?? null
+  const previewExtraImages = Array.isArray(cartItems) ? cartItems.slice(1, 3) : []
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="text-sm text-muted-foreground">Order #{order.id}</p>
+    <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5 transition-shadow hover:shadow-sm">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/80 via-primary to-primary/10" />
+
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-[180px]">
+          <p className="text-sm font-medium text-muted-foreground">Order #{displayIndex}</p>
           <p className="text-xs text-muted-foreground mt-1">
             {date.toLocaleString("en-NG", {
               dateStyle: "medium",
@@ -41,15 +53,59 @@ function OrderCard({ order }: { order: Order }) {
           {order.status.replace(/_/g, " ")}
         </span>
       </div>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-        <span>
+
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+        <span className="inline-flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
           {order.delivery_method === "pickup" ? "Pickup" : "Delivery"} · {order.location ?? "—"}
         </span>
-        {lineCount > 0 && <span>{lineCount} line item{lineCount !== 1 ? "s" : ""}</span>}
+
+        <div className="flex items-baseline gap-2">
+          <span className="font-semibold text-foreground">₦{formatPrice(order.total_amount)}</span>
+          <span className="text-xs text-muted-foreground">Total</span>
+        </div>
       </div>
-      <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-        <span className="font-semibold text-foreground">₦{formatPrice(order.total_amount)}</span>
-        <span className="text-xs text-muted-foreground">VAT incl. where applicable</span>
+
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex -space-x-2">
+            {previewImage ? (
+              <img
+                src={previewImage}
+                alt={previewName}
+                className="h-10 w-10 rounded-full border border-border bg-muted object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="h-10 w-10 rounded-full border border-border bg-muted" />
+            )}
+            {previewExtraImages.map((it: any, idx: number) => {
+              const img = it?.image_url ?? it?.foodImage
+              const name = it?.name ?? it?.foodName ?? "Item"
+              return img ? (
+                <img
+                  key={`${idx}-${name}`}
+                  src={img}
+                  alt={name}
+                  className="h-10 w-10 rounded-full border border-border bg-muted object-cover"
+                  loading="lazy"
+                />
+              ) : null
+            })}
+          </div>
+
+          <div className="min-w-0">
+            {lineCount > 0 ? (
+              <p className="text-sm text-muted-foreground truncate">
+                {lineCount} item{lineCount !== 1 ? "s" : ""} · {previewName}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">Items unavailable</p>
+            )}
+          </div>
+        </div>
+
+        <p className="text-xs text-muted-foreground whitespace-nowrap">VAT included when applicable</p>
       </div>
     </div>
   )
@@ -89,8 +145,8 @@ export default async function OrdersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
+          {orders.map((order, idx) => (
+            <OrderCard key={order.id} order={order} displayIndex={idx + 1} />
           ))}
         </div>
       )}
