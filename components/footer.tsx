@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { Mail, Phone, MapPin, Instagram, Twitter, Facebook } from "lucide-react"
+import { Mail, Phone, MapPin, Instagram } from "lucide-react"
 
 export function Footer() {
   return (
@@ -21,14 +21,14 @@ export function Footer() {
               Delicious Nigerian food delivered fast to your door from our multiple locations.
             </p>
             <div className="flex items-center gap-3 mt-5">
-              <a href="#" aria-label="Instagram" className="text-footer-foreground/60 hover:text-primary transition-colors">
+              <a
+                href="https://www.instagram.com/manchi_takeout/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+                className="text-footer-foreground/60 hover:text-primary transition-colors"
+              >
                 <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" aria-label="Twitter" className="text-footer-foreground/60 hover:text-primary transition-colors">
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" aria-label="Facebook" className="text-footer-foreground/60 hover:text-primary transition-colors">
-                <Facebook className="h-5 w-5" />
               </a>
             </div>
           </div>
@@ -80,22 +80,27 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-footer-foreground mb-4">Contact Info</h3>
             <div className="flex flex-col gap-3">
-              <a href="mailto:test@manchi.com" className="flex items-center gap-2 text-sm text-footer-foreground/70 hover:text-primary transition-colors">
+              <a
+                href="mailto:hi@manchi.ng"
+                className="flex items-center gap-2 text-sm text-footer-foreground/70 hover:text-primary transition-colors"
+              >
                 <Mail className="h-4 w-4 shrink-0" />
-                test@manchi.com
+                hi@manchi.ng
               </a>
-              <a href="tel:+23401010101010" className="flex items-center gap-2 text-sm text-footer-foreground/70 hover:text-primary transition-colors">
+              <a
+                href="tel:+2347072452303"
+                className="flex items-center gap-2 text-sm text-footer-foreground/70 hover:text-primary transition-colors"
+              >
                 <Phone className="h-4 w-4 shrink-0" />
-                +234 010 101 01010
+                07072452303
               </a>
               <div className="flex flex-col gap-2">
                 <div className="flex items-start gap-2 text-sm text-footer-foreground/70">
                   <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                  <span><strong className="text-footer-foreground/90">Chasemall:</strong> 33, Abakaliki Road by 38 Bus Stop, GRA, Enugu, Enugu State.</span>
-                </div>
-                <div className="flex items-start gap-2 text-sm text-footer-foreground/70">
-                  <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                  <span><strong className="text-footer-foreground/90">Aurora Mall:</strong> No. 39 Uyo Street off Stadium Road, Beside Save a Life, Rumuomasi Port Harcourt, Rivers State.</span>
+                  <span>
+                    <strong className="text-footer-foreground/90">Port Harcourt:</strong>{" "}
+                    Opposite Eromo Filling Station, New Road Eneka Atali Road.
+                  </span>
                 </div>
               </div>
             </div>

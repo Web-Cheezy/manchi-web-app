@@ -186,8 +186,10 @@ export function CheckoutContent({
             >
               <RadioGroupItem value="Chasemall" className="shrink-0" />
               <div className="flex-1 min-w-0">
-                <span className="font-medium text-foreground">Chasemall</span>
-                <p className="text-xs text-muted-foreground mt-0.5">33, Abakaliki Road by 38 Bus Stop, GRA, Enugu, Enugu State.</p>
+                <span className="font-medium text-foreground">Port Harcourt</span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Opposite Eromo Filling Station, New Road Eneka Atali Road.
+                </p>
               </div>
             </label>
             <label
@@ -199,8 +201,10 @@ export function CheckoutContent({
             >
               <RadioGroupItem value="Aurora" className="shrink-0" />
               <div className="flex-1 min-w-0">
-                <span className="font-medium text-foreground">Aurora Mall</span>
-                <p className="text-xs text-muted-foreground mt-0.5">No. 39 Uyo Street off Stadium Road, Beside Save a Life, Rumuomasi Port Harcourt, Rivers State.</p>
+                <span className="font-medium text-foreground">Port Harcourt</span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Opposite Eromo Filling Station, New Road Eneka Atali Road.
+                </p>
               </div>
             </label>
           </RadioGroup>

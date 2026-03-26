@@ -33,7 +33,8 @@ export default async function CheckoutSuccessPage({
   const missingPaystackReference = !paystackRef
 
   const isPickup = methodParam === "pickup"
-  const storeLocation = locationParam === "Aurora" ? "Aurora Mall" : locationParam === "Chasemall" ? "Chasemall" : null
+  // Client is using a single Port Harcourt address; keep backend location param but display consistently.
+  const storeLocation = locationParam === "Aurora" || locationParam === "Chasemall" ? "Port Harcourt" : null
 
   const user = await getUser()
   const [addresses, profile, foods] = await Promise.all([
@@ -101,8 +102,8 @@ export default async function CheckoutSuccessPage({
                   <p className="text-sm text-muted-foreground mt-1">{paymentError}</p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Your cart is still available. If you were charged, contact us at{" "}
-                    <a href="mailto:test@manchi.com" className="text-primary font-medium">
-                      test@manchi.com
+                    <a href="mailto:hi@manchi.ng" className="text-primary font-medium">
+                      hi@manchi.ng
                     </a>{" "}
                     with your reference: <code className="text-xs">{paystackRef}</code>
                   </p>
