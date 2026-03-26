@@ -33,7 +33,9 @@ function OrderCard({ order, displayIndex }: { order: Order; displayIndex: number
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-[180px]">
-          <p className="text-sm font-medium text-muted-foreground">Order #{displayIndex}</p>
+          <p className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+            Order #{displayIndex}
+          </p>
           <p className="text-xs text-muted-foreground mt-1">
             {date.toLocaleString("en-NG", {
               dateStyle: "medium",

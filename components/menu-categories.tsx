@@ -35,9 +35,7 @@ export function MenuCategories({ categories, selectedCategoryId = null, onSelect
             See all
           </a>
         </div>
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-card to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-card to-transparent" />
+        <div className="relative overflow-hidden">
           <div className="-mx-2 flex gap-2 overflow-x-auto px-2 pb-1 pt-1 sm:pt-2 no-scrollbar">
             <button
               type="button"
