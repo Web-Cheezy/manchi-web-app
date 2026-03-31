@@ -101,6 +101,11 @@ export function Footer() {
                     <strong className="text-footer-foreground/90">Port Harcourt:</strong>{" "}
                     Opposite Eromo Filling Station, New Road Eneka Atali Road.
                   </span>
+                  <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    <strong className="text-footer-foreground/90">Enugu:</strong>{" "}
+                    Chasemall 33, Abakaliki Road by 38 Bus Stop, GRA, Enugu, Enugu State.
+                  </span>
                 </div>
               </div>
             </div>
