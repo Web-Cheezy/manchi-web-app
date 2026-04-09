@@ -140,4 +140,7 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+  .legal-prose h2 {
+    scroll-margin-top: 5rem;
+  }
 }

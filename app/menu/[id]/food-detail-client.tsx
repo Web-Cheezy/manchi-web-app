@@ -9,7 +9,8 @@ import { useCart } from "@/lib/cart"
 import type { FoodWithCategory, SideForFood, CartSideItem } from "@/lib/db/types"
 import { formatPrice } from "@/lib/format"
 import { useAvailability } from "@/lib/availability/availability-context"
-import { foodMenuUiStatus, sideMenuUiStatus } from "@/lib/availability/status"
+import { effectiveFoodMenuUiStatus, effectiveSideMenuUiStatus } from "@/lib/availability/status"
+import { useBranchAvailability } from "@/lib/browse/branch-availability-context"
 
 interface FoodDetailClientProps {
   food: FoodWithCategory
@@ -25,11 +26,18 @@ export function FoodDetailClient({ food, sides }: FoodDetailClientProps) {
   const [addedToCart, setAddedToCart] = useState(false)
   const { addToCart, itemCount, storeLocation } = useCart()
   const { foods: foodAvailabilityMaps, sides: sideAvailabilityMaps } = useAvailability()
+  const { applyBranchAvailability } = useBranchAvailability()
 
-  const foodUi = foodMenuUiStatus(food, storeLocation, foodAvailabilityMaps)
+  const foodUi = effectiveFoodMenuUiStatus(
+    food,
+    applyBranchAvailability,
+    storeLocation,
+    foodAvailabilityMaps
+  )
   const getSideUiStatus = useMemo(
-    () => (sideId: number) => sideMenuUiStatus(sideId, storeLocation, sideAvailabilityMaps),
-    [storeLocation, sideAvailabilityMaps]
+    () => (sideId: number) =>
+      effectiveSideMenuUiStatus(sideId, applyBranchAvailability, storeLocation, sideAvailabilityMaps),
+    [applyBranchAvailability, storeLocation, sideAvailabilityMaps]
   )
 
   const incrementQuantity = () => setQuantity((q) => Math.min(q + 1, 10))

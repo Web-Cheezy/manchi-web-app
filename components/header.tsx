@@ -14,14 +14,18 @@ import {
   Home,
   UtensilsCrossed,
   Star,
-  Package,
+  ClipboardList,
   ChevronRight,
 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet"
 import { HeaderAddressPicker } from "@/components/address"
 import { SearchAutocomplete } from "@/components/search-autocomplete"
+import { BrowseAccuracyBanner } from "@/components/browse-accuracy-banner"
 import { useCart } from "@/lib/cart"
 import type { Address, FoodWithCategory } from "@/lib/db/types"
+import {
+  BranchAvailabilitySync,
+} from "@/lib/browse/branch-availability-context"
 
 interface HeaderProps {
   addresses?: Address[]
@@ -49,7 +53,9 @@ export function Header({
   }, [])
 
   return (
+    <>
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-md shadow-sm">
+      <BranchAvailabilitySync userId={userId} addressCount={addresses.length} />
       {/* Main row */}
       <div className="px-3 py-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between gap-3">
@@ -101,13 +107,12 @@ export function Header({
                         {[
                           { href: "/", label: "Home", icon: Home },
                           { href: "/menu", label: "Our Menu", icon: UtensilsCrossed },
-                          { href: "/account/orders", label: "My Orders", icon: Package },
-                          { href: "#popular", label: "Popular Dishes", icon: Star, isAnchor: true },
+                          { href: "/account/orders", label: "My Orders", icon: ClipboardList },
+                          { href: "/#popular", label: "Popular Dishes", icon: Star },
                         ].map((item) => {
                           const Icon = item.icon
-                          const Component = item.isAnchor ? "a" : Link
                           return (
-                            <Component
+                            <Link
                               key={item.label}
                               href={item.href}
                               className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-foreground/90 hover:text-foreground hover:bg-primary/5 dark:hover:bg-primary/10 transition-all duration-200"
@@ -117,7 +122,7 @@ export function Header({
                               </span>
                               <span className="flex-1 font-medium">{item.label}</span>
                               <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200" />
-                            </Component>
+                            </Link>
                           )
                         })}
                       </div>
@@ -201,9 +206,9 @@ export function Header({
                     <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                       <span>© 2026 Manchi</span>
                       <div className="flex items-center gap-3">
-                        <a href="#" className="hover:text-foreground transition-colors">Terms</a>
+                        <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
                         <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
-                        <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
+                        <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
                       </div>
                     </div>
                   </div>
@@ -345,5 +350,7 @@ export function Header({
         </div>
       </div>
     </header>
+    <BrowseAccuracyBanner />
+    </>
   )
 }

@@ -214,6 +214,15 @@ function LoginForm() {
                 >
                   Use a different email
                 </button>
+                <p className="text-sm text-muted-foreground">
+                  New here?{" "}
+                  <Link
+                    href={`/signup?redirect=${encodeURIComponent(redirectTo)}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Create an account
+                  </Link>
+                </p>
               </div>
             </form>
           </div>
@@ -231,9 +240,9 @@ function LoginForm() {
           <div className="w-full max-w-md space-y-8">
             <div className="text-center">
               <ManchiLogo />
-              <h1 className="mt-8 text-2xl font-bold text-foreground">Sign in with your email</h1>
+              <h1 className="mt-8 text-2xl font-bold text-foreground">Sign in with email code</h1>
               <p className="mt-2 text-muted-foreground">
-                We&apos;ll send you a 6-digit code. No password needed.
+                We&apos;ll email you a 6-digit one-time code (OTP).
               </p>
             </div>
 
@@ -272,7 +281,7 @@ function LoginForm() {
                   </>
                 )}
               </Button>
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <button
                   type="button"
                   onClick={() => setStep("choose")}
@@ -280,6 +289,15 @@ function LoginForm() {
                 >
                   Back
                 </button>
+                <p className="text-sm text-muted-foreground">
+                  New here?{" "}
+                  <Link
+                    href={`/signup?redirect=${encodeURIComponent(redirectTo)}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Create an account
+                  </Link>
+                </p>
               </div>
             </form>
           </div>
@@ -299,7 +317,7 @@ function LoginForm() {
               <ManchiLogo />
               <h1 className="mt-8 text-2xl font-bold text-foreground">Sign in with password</h1>
               <p className="mt-2 text-muted-foreground">
-                Enter the email and password you used when you signed up.
+                Use the email and password from your account.
               </p>
             </div>
 
@@ -363,7 +381,7 @@ function LoginForm() {
                   "Sign in"
                 )}
               </Button>
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <button
                   type="button"
                   onClick={() => setStep("choose")}
@@ -371,6 +389,15 @@ function LoginForm() {
                 >
                   Back
                 </button>
+                <p className="text-sm text-muted-foreground">
+                  New here?{" "}
+                  <Link
+                    href={`/signup?redirect=${encodeURIComponent(redirectTo)}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Create an account
+                  </Link>
+                </p>
               </div>
             </form>
           </div>
@@ -387,9 +414,9 @@ function LoginForm() {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <ManchiLogo />
-            <h1 className="mt-8 text-2xl font-bold text-foreground">Welcome back</h1>
+            <h1 className="mt-8 text-2xl font-bold text-foreground">Log in</h1>
             <p className="mt-2 text-muted-foreground">
-              Sign in to order food, track your orders, and save your favourite dishes.
+              Sign in with your password, or with a one-time code we send to your email.
             </p>
           </div>
 
@@ -398,13 +425,13 @@ function LoginForm() {
               type="button"
               className="w-full h-14 text-base font-medium"
               size="lg"
-              onClick={() => setStep("email-code")}
+              onClick={() => setStep("password")}
             >
-              <Mail className="mr-3 h-5 w-5" />
-              Continue with email
+              <KeyRound className="mr-3 h-5 w-5" />
+              Sign in with password
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              We&apos;ll send you a 6-digit code. No password needed. New customers can use this too.
+              For accounts created with email and password.
             </p>
 
             <div className="relative py-2">
@@ -421,13 +448,23 @@ function LoginForm() {
               variant="outline"
               className="w-full h-14 text-base font-medium"
               size="lg"
-              onClick={() => setStep("password")}
+              onClick={() => setStep("email-code")}
             >
-              <KeyRound className="mr-3 h-5 w-5" />
-              I have a password
+              <Mail className="mr-3 h-5 w-5" />
+              Sign in with email code
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              For people who already created an account with a password.
+              We&apos;ll email you a 6-digit one-time code (OTP).
+            </p>
+
+            <p className="text-center text-sm text-muted-foreground pt-2">
+              Don&apos;t have an account?{" "}
+              <Link
+                href={`/signup?redirect=${encodeURIComponent(redirectTo)}`}
+                className="font-medium text-primary hover:underline"
+              >
+                Sign up
+              </Link>
             </p>
           </div>
         </div>

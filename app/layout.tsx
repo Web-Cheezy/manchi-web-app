@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { CartProvider } from '@/lib/cart'
 import { AvailabilityProvider } from '@/lib/availability/availability-context'
+import { BranchAvailabilityProvider } from '@/lib/browse/branch-availability-context'
 import {
   getSerializedFoodAvailability,
   getSerializedSideAvailability,
@@ -52,7 +53,7 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AvailabilityProvider foods={foodAvailability} sides={sideAvailability}>
             <CartProvider>
-              {children}
+              <BranchAvailabilityProvider>{children}</BranchAvailabilityProvider>
             </CartProvider>
           </AvailabilityProvider>
           <Analytics />

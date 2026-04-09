@@ -64,6 +64,29 @@ export function sideMenuUiStatus(
   return "available"
 }
 
+/** Guests / no delivery address: only global `is_available`; otherwise branch tables apply. */
+export function effectiveFoodMenuUiStatus(
+  food: { id: number; is_available: boolean },
+  applyBranchAvailability: boolean,
+  storeLocation: StoreLocation,
+  maps: SerializedFoodAvailability | undefined
+): FoodMenuUiStatus {
+  if (!applyBranchAvailability) {
+    return food.is_available ? "available" : "hidden"
+  }
+  return foodMenuUiStatus(food, storeLocation, maps)
+}
+
+export function effectiveSideMenuUiStatus(
+  sideId: number,
+  applyBranchAvailability: boolean,
+  storeLocation: StoreLocation,
+  maps: SerializedSideAvailability | undefined
+): SideMenuUiStatus {
+  if (!applyBranchAvailability) return "available"
+  return sideMenuUiStatus(sideId, storeLocation, maps)
+}
+
 export function isStoreLocation(value: string): value is StoreLocation {
   return STORE_LOCATIONS.includes(value as StoreLocation)
 }

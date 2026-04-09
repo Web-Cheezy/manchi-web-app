@@ -12,41 +12,22 @@ export async function signIn(email: string, password: string) {
   return { user: data.user, error: null }
 }
 
-interface SignUpOptions {
-  fullName?: string
-}
-
-/** Sign up with email and password */
-export async function signUp(email: string, password: string, options?: SignUpOptions) {
+/** Sign up with email and password only (no extra profile fields at registration). */
+export async function signUp(email: string, password: string) {
   const supabase = createClient()
   const { data, error } = await supabase.auth.signUp({
-    email,
+    email: email.trim(),
     password,
-    options: {
-      data: {
-        full_name: options?.fullName || null,
-      },
-    },
   })
   if (error) {
-    return { user: null, error: error.message }
+    return { user: null, session: null, error: error.message }
   }
-
-  // If user was created and we have a full name, upsert the profile
-  if (data.user && options?.fullName) {
-    await supabase.from("profiles").upsert({
-      id: data.user.id,
-      full_name: options.fullName,
-    })
-  }
-
-  return { user: data.user, error: null }
+  return { user: data.user, session: data.session, error: null }
 }
 
 /**
- * Send a one-time code to the user's email. Supabase may send either a 6-digit code or a magic link
- * depending on project settings. Use verifyEmailCode() to verify the 6-digit code.
- * Works for both sign-in and sign-up (new users are created when they verify).
+ * Send a one-time code (OTP) to an existing user's email for login.
+ * If the email is not registered, this returns a signup-directed message.
  */
 export async function sendEmailCode(email: string, next = "/") {
   const supabase = createClient()
@@ -56,9 +37,22 @@ export async function sendEmailCode(email: string, next = "/") {
     email: email.trim(),
     options: {
       emailRedirectTo,
+      shouldCreateUser: false,
     },
   })
   if (error) {
+    const raw = error.message.toLowerCase()
+    if (
+      raw.includes("user not found") ||
+      raw.includes("signup") ||
+      raw.includes("sign up") ||
+      raw.includes("not allowed")
+    ) {
+      return {
+        success: false,
+        error: "Email not registered. Please sign up first, then log in.",
+      }
+    }
     return { success: false, error: error.message }
   }
   return { success: true, error: null }

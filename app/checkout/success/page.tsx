@@ -35,7 +35,7 @@ export default async function CheckoutSuccessPage({
   const isPickup = methodParam === "pickup"
   const branchDisplay: Record<string, string> = {
     Chasemall: "Enugu — Chasemall",
-    Aurora: "Port Harcourt — Aurora Mall",
+    Aurora: "Port Harcourt — Aurora",
     Eromo: "Port Harcourt — Eromo",
   }
   const storeLocation =
