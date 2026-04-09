@@ -24,13 +24,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useCart } from "@/lib/cart"
 import { formatAddressFull } from "@/lib/db/addresses"
 import { formatPrice } from "@/lib/format"
-import type { Address } from "@/lib/db/types"
+import type { Address, StoreLocation } from "@/lib/db/types"
 import {
   CHECKOUT_PUBLIC_EMAIL,
   CHECKOUT_PUBLIC_PHONE_DISPLAY,
   CHECKOUT_PUBLIC_PHONE_TEL,
 } from "@/lib/checkout/public-contact"
 import { isServedRegion, servedRegionErrorMessage } from "@/lib/delivery/served-regions"
+import { getBranchDisplayInfo, resolveStoreLocationFromAddress } from "@/lib/location/branch"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=100&h=100&fit=crop&q=80"
 const VAT_RATE = 0.075
@@ -66,6 +67,13 @@ export function CheckoutContent({
 
   useEffect(() => {
     if (!mounted) return
+    if (deliveryMethod !== "delivery") return
+    const addr = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0]
+    if (addr) setStoreLocation(resolveStoreLocationFromAddress(addr))
+  }, [mounted, deliveryMethod, selectedAddressId, addresses, setStoreLocation])
+
+  useEffect(() => {
+    if (!mounted) return
     if (deliveryMethod === "pickup") {
       setTransportFee(0)
       return
@@ -88,6 +96,8 @@ export function CheckoutContent({
     }
   }, [mounted, deliveryMethod, selectedAddressId, addresses])
 
+  const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0]
+
   if (!mounted) {
     return <CheckoutSkeleton />
   }
@@ -97,7 +107,6 @@ export function CheckoutContent({
   }
 
   const isPickup = deliveryMethod === "pickup"
-  const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? addresses[0]
   const hasValidAddress = !isPickup && selectedAddress
   const addressInServedRegion =
     isPickup || !selectedAddress || isServedRegion(selectedAddress.state, selectedAddress.lga)
@@ -167,47 +176,53 @@ export function CheckoutContent({
         <section className="rounded-2xl border border-border bg-card p-6">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-4">
             <Building2 className="h-5 w-5 text-primary" />
-            Select your nearest location
+            {isPickup ? "Pickup location" : "Fulfillment branch"}
           </h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Your order will be prepared at the location you select.
+            {isPickup
+              ? "Choose where you will collect your order. Menu and stock depend on this branch."
+              : "Your branch is set from the delivery address below. It determines menu availability and stock."}
           </p>
-          <RadioGroup
-            value={storeLocation}
-            onValueChange={(v) => setStoreLocation(v as "Chasemall" | "Aurora")}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-          >
-            <label
-              className={`flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition-all ${
-                storeLocation === "Chasemall"
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              }`}
+          {isPickup ? (
+            <RadioGroup
+              value={storeLocation}
+              onValueChange={(v) => setStoreLocation(v as StoreLocation)}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3"
             >
-              <RadioGroupItem value="Chasemall" className="shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="font-medium text-foreground">Port Harcourt</span>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Opposite Eromo Filling Station, New Road Eneka Atali Road.
+              {(["Chasemall", "Aurora", "Eromo"] as const).map((loc) => {
+                const info = getBranchDisplayInfo(loc)
+                return (
+                  <label
+                    key={loc}
+                    className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-all ${
+                      storeLocation === loc
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <RadioGroupItem value={loc} className="shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-medium text-foreground text-sm leading-tight block">{info.label}</span>
+                      <p className="text-[11px] text-muted-foreground mt-1.5 leading-snug">{info.subtitle}</p>
+                    </div>
+                  </label>
+                )
+              })}
+            </RadioGroup>
+          ) : selectedAddress ? (
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex gap-3">
+              <Store className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-muted-foreground">Preparing from</p>
+                <p className="text-sm font-semibold text-foreground mt-0.5">
+                  {getBranchDisplayInfo(resolveStoreLocationFromAddress(selectedAddress)).label}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+                  {getBranchDisplayInfo(resolveStoreLocationFromAddress(selectedAddress)).subtitle}
                 </p>
               </div>
-            </label>
-            <label
-              className={`flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition-all ${
-                storeLocation === "Aurora"
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              }`}
-            >
-              <RadioGroupItem value="Aurora" className="shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="font-medium text-foreground">Port Harcourt</span>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Opposite Eromo Filling Station, New Road Eneka Atali Road.
-                </p>
-              </div>
-            </label>
-          </RadioGroup>
+            </div>
+          ) : null}
         </section>
 
         {/* Delivery Address - only for delivery */}

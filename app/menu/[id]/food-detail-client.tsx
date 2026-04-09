@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useMemo } from "react"
 import Link from "next/link"
 import { Plus, Minus, ShoppingCart, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,8 @@ import { SidesSelector, calculateSidesTotal, type SelectedSide } from "@/compone
 import { useCart } from "@/lib/cart"
 import type { FoodWithCategory, SideForFood, CartSideItem } from "@/lib/db/types"
 import { formatPrice } from "@/lib/format"
+import { useAvailability } from "@/lib/availability/availability-context"
+import { foodMenuUiStatus, sideMenuUiStatus } from "@/lib/availability/status"
 
 interface FoodDetailClientProps {
   food: FoodWithCategory
@@ -21,7 +23,14 @@ export function FoodDetailClient({ food, sides }: FoodDetailClientProps) {
   const [quantity, setQuantity] = useState(1)
   const [selectedSides, setSelectedSides] = useState<SelectedSide[]>([])
   const [addedToCart, setAddedToCart] = useState(false)
-  const { addToCart, itemCount } = useCart()
+  const { addToCart, itemCount, storeLocation } = useCart()
+  const { foods: foodAvailabilityMaps, sides: sideAvailabilityMaps } = useAvailability()
+
+  const foodUi = foodMenuUiStatus(food, storeLocation, foodAvailabilityMaps)
+  const getSideUiStatus = useMemo(
+    () => (sideId: number) => sideMenuUiStatus(sideId, storeLocation, sideAvailabilityMaps),
+    [storeLocation, sideAvailabilityMaps]
+  )
 
   const incrementQuantity = () => setQuantity((q) => Math.min(q + 1, 10))
   const decrementQuantity = () => setQuantity((q) => Math.max(q - 1, 1))
@@ -30,14 +39,20 @@ export function FoodDetailClient({ food, sides }: FoodDetailClientProps) {
     setSelectedSides(selection)
   }, [])
 
-  const hasRequiredSides = sides.required.length > 0
-  const isRequiredSelected = !hasRequiredSides || selectedSides.some((s) => s.side.is_required)
+  const requiredVisible = sides.required.filter((s) => getSideUiStatus(s.id) !== "hidden")
+  const optionalVisible = sides.optional.filter((s) => getSideUiStatus(s.id) !== "hidden")
+  const hasAnySideOption = requiredVisible.length > 0 || optionalVisible.length > 0
+  const isRequiredSelected =
+    requiredVisible.length === 0 || selectedSides.some((s) => s.side.is_required)
   
   const sidesTotal = calculateSidesTotal(selectedSides)
   const itemTotal = (food.price + sidesTotal) * quantity
 
   const handleAddToCart = () => {
     if (!isRequiredSelected) {
+      return
+    }
+    if (foodUi !== "available") {
       return
     }
 
@@ -64,15 +79,14 @@ export function FoodDetailClient({ food, sides }: FoodDetailClientProps) {
     setTimeout(() => setAddedToCart(false), 2000)
   }
 
-  const hasSides = sides.required.length > 0 || sides.optional.length > 0
-
   return (
     <div className="mt-8 pt-6 border-t border-border space-y-6">
       {/* Sides Selector */}
-      {hasSides && (
+      {hasAnySideOption && (
         <SidesSelector
           sides={sides}
           onSelectionChange={handleSidesChange}
+          getSideUiStatus={getSideUiStatus}
         />
       )}
 
@@ -124,7 +138,9 @@ export function FoodDetailClient({ food, sides }: FoodDetailClientProps) {
       <div className="flex flex-col sm:flex-row gap-3">
         <Button
           onClick={handleAddToCart}
-          disabled={!food.is_available || !isRequiredSelected || addedToCart}
+          disabled={
+            !food.is_available || foodUi !== "available" || !isRequiredSelected || addedToCart
+          }
           size="lg"
           className={`flex-1 h-12 text-base font-semibold transition-all ${
             addedToCart ? "bg-green-600 hover:bg-green-600" : ""
@@ -170,7 +186,19 @@ export function FoodDetailClient({ food, sides }: FoodDetailClientProps) {
         </p>
       )}
 
-      {food.is_available && hasRequiredSides && !isRequiredSelected && (
+      {food.is_available && foodUi === "hidden" && (
+        <p className="text-sm text-destructive">
+          This item is not served at your selected branch. Choose another address or browse the menu.
+        </p>
+      )}
+
+      {food.is_available && foodUi === "out_of_stock" && (
+        <p className="text-sm text-amber-700 dark:text-amber-400">
+          Out of stock at this branch right now. You can still browse other dishes.
+        </p>
+      )}
+
+      {food.is_available && foodUi === "available" && requiredVisible.length > 0 && !isRequiredSelected && (
         <p className="text-sm text-destructive">
           Please select a required side to add this item to your cart.
         </p>

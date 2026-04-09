@@ -5,6 +5,7 @@ import { Check, Plus, Minus, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { SideForFood } from "@/lib/db/types"
 import { formatPrice } from "@/lib/format"
+import type { SideMenuUiStatus } from "@/lib/availability/status"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=100&h=100&fit=crop&q=80"
 
@@ -20,14 +21,21 @@ interface SidesSelectorProps {
   }
   onSelectionChange?: (selection: SelectedSide[]) => void
   className?: string
+  /** Per-side status at the active branch (hidden sides are omitted). */
+  getSideUiStatus?: (sideId: number) => SideMenuUiStatus
 }
 
-export function SidesSelector({ sides, onSelectionChange, className = "" }: SidesSelectorProps) {
+export function SidesSelector({ sides, onSelectionChange, className = "", getSideUiStatus }: SidesSelectorProps) {
   const [selectedRequired, setSelectedRequired] = useState<SideForFood | null>(null)
   const [selectedOptional, setSelectedOptional] = useState<Map<number, number>>(new Map())
 
-  const hasRequired = sides.required.length > 0
-  const hasOptional = sides.optional.length > 0
+  const statusOf = getSideUiStatus ?? (() => "available" as SideMenuUiStatus)
+
+  const requiredVisible = sides.required.filter((s) => statusOf(s.id) !== "hidden")
+  const optionalVisible = sides.optional.filter((s) => statusOf(s.id) !== "hidden")
+
+  const hasRequired = requiredVisible.length > 0
+  const hasOptional = optionalVisible.length > 0
   const hasSides = hasRequired || hasOptional
 
   const getSelection = useCallback((): SelectedSide[] => {
@@ -36,16 +44,16 @@ export function SidesSelector({ sides, onSelectionChange, className = "" }: Side
     if (selectedRequired) {
       selection.push({ side: selectedRequired, quantity: 1 })
     }
-    
+
     selectedOptional.forEach((quantity, sideId) => {
-      const side = sides.optional.find((s) => s.id === sideId)
+      const side = optionalVisible.find((s) => s.id === sideId)
       if (side && quantity > 0) {
         selection.push({ side, quantity })
       }
     })
     
     return selection
-  }, [selectedRequired, selectedOptional, sides.optional])
+  }, [selectedRequired, selectedOptional, optionalVisible])
 
   useEffect(() => {
     onSelectionChange?.(getSelection())
@@ -109,17 +117,22 @@ export function SidesSelector({ sides, onSelectionChange, className = "" }: Side
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {sides.required.map((side) => {
+            {requiredVisible.map((side) => {
               const isSelected = selectedRequired?.id === side.id
+              const st = statusOf(side.id)
+              const disabled = st === "out_of_stock"
               return (
                 <button
                   key={side.id}
                   type="button"
-                  onClick={() => handleRequiredSelect(side)}
+                  disabled={disabled}
+                  onClick={() => !disabled && handleRequiredSelect(side)}
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
-                    isSelected
-                      ? "border-primary bg-primary/5 ring-1 ring-primary"
-                      : "border-border bg-card hover:border-primary/50"
+                    disabled
+                      ? "border-border/60 bg-muted/40 opacity-80 cursor-not-allowed"
+                      : isSelected
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border bg-card hover:border-primary/50"
                   }`}
                 >
                   <div className="relative h-12 w-12 rounded-lg overflow-hidden bg-muted shrink-0">
@@ -137,6 +150,9 @@ export function SidesSelector({ sides, onSelectionChange, className = "" }: Side
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground text-sm truncate">{side.name}</p>
+                    {disabled && (
+                      <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">Out of stock</p>
+                    )}
                     {side.type && (
                       <p className="text-xs text-muted-foreground capitalize">{side.type}</p>
                     )}
@@ -164,16 +180,20 @@ export function SidesSelector({ sides, onSelectionChange, className = "" }: Side
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {sides.optional.map((side) => {
+            {optionalVisible.map((side) => {
               const quantity = selectedOptional.get(side.id) || 0
               const isSelected = quantity > 0
+              const st = statusOf(side.id)
+              const disabled = st === "out_of_stock"
               return (
                 <div
                   key={side.id}
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                    isSelected
-                      ? "border-primary bg-primary/5"
-                      : "border-border bg-card"
+                    disabled
+                      ? "border-border/60 bg-muted/40 opacity-80"
+                      : isSelected
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card"
                   }`}
                 >
                   <div className="relative h-12 w-12 rounded-lg overflow-hidden bg-muted shrink-0">
@@ -190,9 +210,16 @@ export function SidesSelector({ sides, onSelectionChange, className = "" }: Side
                       {side.price > 0 ? `+₦${formatPrice(side.price)}` : "Free"}
                       {side.type && ` · ${side.type}`}
                     </p>
+                    {disabled && (
+                      <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400 mt-0.5">
+                        Out of stock
+                      </p>
+                    )}
                   </div>
-                  
-                  {isSelected ? (
+
+                  {disabled ? (
+                    <span className="text-[11px] font-medium text-muted-foreground shrink-0">—</span>
+                  ) : isSelected ? (
                     <div className="flex items-center gap-1 shrink-0">
                       <Button
                         type="button"

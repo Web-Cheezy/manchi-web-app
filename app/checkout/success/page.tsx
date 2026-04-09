@@ -33,8 +33,13 @@ export default async function CheckoutSuccessPage({
   const missingPaystackReference = !paystackRef
 
   const isPickup = methodParam === "pickup"
-  // Client is using a single Port Harcourt address; keep backend location param but display consistently.
-  const storeLocation = locationParam === "Aurora" || locationParam === "Chasemall" ? "Port Harcourt" : null
+  const branchDisplay: Record<string, string> = {
+    Chasemall: "Enugu — Chasemall",
+    Aurora: "Port Harcourt — Aurora Mall",
+    Eromo: "Port Harcourt — Eromo",
+  }
+  const storeLocation =
+    locationParam && branchDisplay[locationParam] ? branchDisplay[locationParam] : null
 
   const user = await getUser()
   const [addresses, profile, foods] = await Promise.all([

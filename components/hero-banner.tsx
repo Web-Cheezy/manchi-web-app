@@ -7,6 +7,8 @@ import { MapPin, Bike, ChevronLeft, ChevronRight, ShoppingBag, Plus, Minus, Tras
 import { Button } from "@/components/ui/button"
 import type { FoodWithCategory } from "@/lib/db/types"
 import { useCart } from "@/lib/cart/cart-context"
+import { useAvailability } from "@/lib/availability/availability-context"
+import { foodMenuUiStatus } from "@/lib/availability/status"
 
 const PLACEHOLDER_IMAGE = "/placeholder-food.jpg"
 
@@ -15,8 +17,13 @@ interface HeroBannerProps {
 }
 
 export function HeroBanner({ foods = [] }: HeroBannerProps) {
-  // Get featured foods (ones with images, max 5)
-  const featuredFoods = foods.filter((f) => f.image_url).slice(0, 5)
+  const { storeLocation } = useCart()
+  const { foods: foodAvailabilityMaps } = useAvailability()
+  // Get featured foods (ones with images, max 5) — respect branch availability
+  const featuredFoods = foods
+    .filter((f) => f.image_url)
+    .filter((f) => foodMenuUiStatus(f, storeLocation, foodAvailabilityMaps) !== "hidden")
+    .slice(0, 5)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isHoveringCart, setIsHoveringCart] = useState(false)
 
@@ -59,8 +66,12 @@ export function HeroBanner({ foods = [] }: HeroBannerProps) {
   }, [currentIndex, featuredFoods, nextSlide, getCartInfoForFood, cart.items])
 
   const currentFood = featuredFoods[currentIndex]
+  const currentUi = currentFood
+    ? foodMenuUiStatus(currentFood, storeLocation, foodAvailabilityMaps)
+    : "available"
 
   const handleAddToCart = (food: FoodWithCategory) => {
+    if (foodMenuUiStatus(food, storeLocation, foodAvailabilityMaps) === "out_of_stock") return
     addToCart({
       foodId: food.id,
       foodName: food.name,
@@ -138,13 +149,17 @@ export function HeroBanner({ foods = [] }: HeroBannerProps) {
                       </div>
                     )}
                     {/* Availability Badge */}
-                    {currentFood.is_available ? (
-                      <div className="absolute top-3 right-3 bg-green-500/90 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full">
-                        Available
-                      </div>
-                    ) : (
+                    {!currentFood.is_available ? (
                       <div className="absolute top-3 right-3 bg-red-500/90 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full">
                         Unavailable
+                      </div>
+                    ) : currentUi === "out_of_stock" ? (
+                      <div className="absolute top-3 right-3 bg-amber-600/95 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full">
+                        Out of stock
+                      </div>
+                    ) : (
+                      <div className="absolute top-3 right-3 bg-green-500/90 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full">
+                        Available
                       </div>
                     )}
 
@@ -228,7 +243,13 @@ export function HeroBanner({ foods = [] }: HeroBannerProps) {
                         </span>
                       </div>
                       {/* Order/Add Button */}
-                      {currentFoodCartInfo && currentFoodCartInfo.totalQuantity > 0 ? (
+                      {!currentFood.is_available ? (
+                        <span className="text-xs font-medium text-destructive shrink-0">Unavailable</span>
+                      ) : currentUi === "out_of_stock" ? (
+                        <span className="text-xs font-medium text-amber-700 dark:text-amber-400 shrink-0">
+                          Out of stock
+                        </span>
+                      ) : currentFoodCartInfo && currentFoodCartInfo.totalQuantity > 0 ? (
                         // Show quantity controls when in cart
                         <div className="flex-shrink-0 flex items-center gap-1 bg-muted rounded-full px-1 py-1">
                           {currentFoodCartInfo.totalQuantity === 1 ? (
@@ -262,7 +283,6 @@ export function HeroBanner({ foods = [] }: HeroBannerProps) {
                           </button>
                         </div>
                       ) : (
-                        // Show Order button when not in cart
                         <button
                           onClick={() => handleAddToCart(currentFood)}
                           className="flex-shrink-0 inline-flex items-center justify-center gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold px-4 py-2.5 rounded-full transition-colors"
