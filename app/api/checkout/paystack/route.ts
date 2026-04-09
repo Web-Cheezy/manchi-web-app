@@ -6,6 +6,7 @@ import { resolveTransportFeeNaira } from "@/lib/db/transport-prices.server"
 import type { CartItem, DeliveryMethod, StoreLocation } from "@/lib/db/types"
 import { isServedRegion, servedRegionErrorMessage } from "@/lib/delivery/served-regions"
 import { nairaToKobo } from "@/lib/paystack.server"
+import { assertCartAvailableAtLocation } from "@/lib/db/availability.server"
 
 const CHECKOUT_VAT_RATE = 0.075
 
@@ -91,8 +92,13 @@ export async function POST(req: Request) {
   }
 
   const location = body.location
-  if (location !== "Chasemall" && location !== "Aurora") {
+  if (location !== "Chasemall" && location !== "Aurora" && location !== "Eromo") {
     return NextResponse.json({ error: "Invalid location." }, { status: 400 })
+  }
+
+  const availabilityError = await assertCartAvailableAtLocation(body.cart_items, location)
+  if (availabilityError) {
+    return NextResponse.json({ error: availabilityError }, { status: 400 })
   }
 
   if (delivery_method === "delivery" && !body.delivery_address?.trim()) {

@@ -38,6 +38,25 @@ export interface Category {
   created_at: string
 }
 
+// ─── availability (per branch) ─────────────────────────────────────────────
+export type AvailabilityStatus = "available" | "unavailable" | "out_of_stock"
+
+export interface FoodAvailability {
+  id: number
+  food_id: number | null
+  location: string
+  status: AvailabilityStatus | null
+  updated_at: string
+}
+
+export interface SideAvailability {
+  id: number
+  side_id: number | null
+  location: string
+  status: AvailabilityStatus | null
+  updated_at: string
+}
+
 // ─── foods ─────────────────────────────────────────────────────────────────
 export interface Food {
   id: number
@@ -82,8 +101,8 @@ export interface OrderItem {
 // ─── orders ───────────────────────────────────────────────────────────────
 export type DeliveryMethod = "delivery" | "pickup"
 
-/** Manchi branch / store location for order fulfillment */
-export type StoreLocation = "Chasemall" | "Aurora"
+/** Manchi branch / store location for order fulfillment (`orders.location`, availability tables) */
+export type StoreLocation = "Chasemall" | "Aurora" | "Eromo"
 
 export interface Order {
   id: number

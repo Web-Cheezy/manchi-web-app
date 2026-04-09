@@ -6,6 +6,9 @@ import Link from "next/link"
 import { Search, X, Loader2 } from "lucide-react"
 import type { FoodWithCategory } from "@/lib/db/types"
 import { formatPrice } from "@/lib/format"
+import { useCart } from "@/lib/cart/cart-context"
+import { useAvailability } from "@/lib/availability/availability-context"
+import { foodMenuUiStatus } from "@/lib/availability/status"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=100&h=100&fit=crop&q=80"
 
@@ -24,6 +27,8 @@ export function SearchAutocomplete({
   inputClassName = "",
   variant = "default",
 }: SearchAutocompleteProps) {
+  const { storeLocation } = useCart()
+  const { foods: foodAvailabilityMaps } = useAvailability()
   const [query, setQuery] = useState("")
   const [isOpen, setIsOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
@@ -33,6 +38,10 @@ export function SearchAutocomplete({
 
   const results = query.trim().length >= 2
     ? foods
+        .filter(
+          (food) =>
+            foodMenuUiStatus(food, storeLocation, foodAvailabilityMaps) !== "hidden"
+        )
         .filter((food) =>
           food.name.toLowerCase().includes(query.toLowerCase()) ||
           food.description?.toLowerCase().includes(query.toLowerCase())

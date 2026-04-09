@@ -196,7 +196,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORE_LOCATION_STORAGE_KEY)
-      if (stored === "Chasemall" || stored === "Aurora") {
+      if (stored === "Chasemall" || stored === "Aurora" || stored === "Eromo") {
         setStoreLocationState(stored)
       }
     } catch (e) {

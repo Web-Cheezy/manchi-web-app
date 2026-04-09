@@ -3,6 +3,11 @@ import { Montserrat } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { CartProvider } from '@/lib/cart'
+import { AvailabilityProvider } from '@/lib/availability/availability-context'
+import {
+  getSerializedFoodAvailability,
+  getSerializedSideAvailability,
+} from '@/lib/db/availability.server'
 import './globals.css'
 
 const montserrat = Montserrat({
@@ -31,18 +36,25 @@ export const viewport: Viewport = {
   themeColor: '#C84B31',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const [foodAvailability, sideAvailability] = await Promise.all([
+    getSerializedFoodAvailability(),
+    getSerializedSideAvailability(),
+  ])
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${montserrat.variable} font-sans antialiased bg-background text-foreground`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <AvailabilityProvider foods={foodAvailability} sides={sideAvailability}>
+            <CartProvider>
+              {children}
+            </CartProvider>
+          </AvailabilityProvider>
           <Analytics />
         </ThemeProvider>
       </body>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { MapPin, ChevronDown, Plus, Check, Star, Pencil, Trash2, LogIn } from "lucide-react"
+import { MapPin, ChevronDown, Plus, Check, Star, Pencil, Trash2, LogIn, Store } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -28,6 +28,8 @@ import {
   setDefaultAddress,
   formatAddressFull,
 } from "@/lib/db/addresses"
+import { useCart } from "@/lib/cart/cart-context"
+import { getBranchDisplayInfo, resolveStoreLocationFromAddress } from "@/lib/location/branch"
 
 interface HeaderAddressPickerProps {
   addresses: Address[]
@@ -42,6 +44,7 @@ export function HeaderAddressPicker({
   userId,
   onAddressChange,
 }: HeaderAddressPickerProps) {
+  const { setStoreLocation } = useCart()
   const [isOpen, setIsOpen] = useState(false)
   const [addresses, setAddresses] = useState<Address[]>(initialAddresses)
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(initialSelected)
@@ -57,6 +60,12 @@ export function HeaderAddressPicker({
   useEffect(() => {
     setSelectedAddress(initialSelected)
   }, [initialSelected])
+
+  useEffect(() => {
+    if (selectedAddress) {
+      setStoreLocation(resolveStoreLocationFromAddress(selectedAddress))
+    }
+  }, [selectedAddress, setStoreLocation])
 
   const handleSelectAddress = (address: Address) => {
     setSelectedAddress(address)
@@ -149,6 +158,8 @@ export function HeaderAddressPicker({
     ? `${selectedAddress.house_number} ${selectedAddress.street}, ${selectedAddress.area}`
     : "Select address"
 
+  const branchInfo = selectedAddress ? getBranchDisplayInfo(resolveStoreLocationFromAddress(selectedAddress)) : null
+
   const isLoggedIn = !!userId
 
   return (
@@ -158,6 +169,7 @@ export function HeaderAddressPicker({
         onClick={() => setIsOpen(true)}
         aria-label="Select delivery address"
         className="lg:hidden p-1.5 text-foreground hover:text-primary transition-colors"
+        title={branchInfo ? branchInfo.label : undefined}
       >
         <MapPin className="h-5 w-5" />
       </button>
@@ -165,11 +177,16 @@ export function HeaderAddressPicker({
       {/* Desktop: full address display */}
       <button
         onClick={() => setIsOpen(true)}
-        className="hidden lg:inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        className="hidden lg:inline-flex flex-col items-start gap-0.5 px-2 py-1 rounded-xl bg-muted/50 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors max-w-[220px]"
       >
-        <MapPin className="h-4 w-4 shrink-0 text-primary" />
-        <span className="max-w-[160px] truncate">{displayLabel}</span>
-        <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+        <span className="inline-flex items-center gap-1.5 w-full min-w-0">
+          <MapPin className="h-4 w-4 shrink-0 text-primary" />
+          <span className="truncate">{displayLabel}</span>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 ml-auto" />
+        </span>
+        {branchInfo && (
+          <span className="pl-5 text-[10px] text-primary/90 font-medium truncate w-full">{branchInfo.label}</span>
+        )}
       </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -228,6 +245,18 @@ export function HeaderAddressPicker({
                 </div>
               ) : (
                 <>
+                  {selectedAddress && branchInfo && (
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 mb-1">
+                      <div className="flex items-start gap-2">
+                        <Store className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-foreground">Menu &amp; stock for this branch</p>
+                          <p className="text-sm font-medium text-primary mt-0.5">{branchInfo.label}</p>
+                          <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{branchInfo.subtitle}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
                     {addresses.map((address) => (
                       <div
@@ -270,6 +299,9 @@ export function HeaderAddressPicker({
                             </div>
                             <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
                               {formatAddressFull(address)}
+                            </p>
+                            <p className="mt-1 text-[10px] font-medium text-primary/90">
+                              {getBranchDisplayInfo(resolveStoreLocationFromAddress(address)).label}
                             </p>
                           </div>
                         </button>

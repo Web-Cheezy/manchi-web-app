@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Search, Plus, Minus, X, ShoppingBag, Trash2 } from "lucide-react"
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import type { Category, FoodWithCategory } from "@/lib/db/types"
 import { formatPrice } from "@/lib/format"
 import { useCart } from "@/lib/cart/cart-context"
+import { useAvailability } from "@/lib/availability/availability-context"
+import { foodMenuUiStatus } from "@/lib/availability/status"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&h=260&fit=crop&q=80"
 
@@ -28,7 +30,13 @@ export function MenuContent({
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
   const [localSearch, setLocalSearch] = useState(searchQuery)
-  const { cart, addToCart, updateQuantity, removeFromCart } = useCart()
+  const { cart, addToCart, updateQuantity, removeFromCart, storeLocation } = useCart()
+  const { foods: foodAvailabilityMaps } = useAvailability()
+
+  const visibleFoods = useMemo(
+    () => foods.filter((f) => foodMenuUiStatus(f, storeLocation, foodAvailabilityMaps) !== "hidden"),
+    [foods, storeLocation, foodAvailabilityMaps]
+  )
 
   const getCartInfoForFood = (foodId: number) => {
     const cartItems = cart.items.filter((item) => item.foodId === foodId)
@@ -40,6 +48,7 @@ export function MenuContent({
   const handleAddToCart = (e: React.MouseEvent, food: FoodWithCategory) => {
     e.preventDefault()
     e.stopPropagation()
+    if (foodMenuUiStatus(food, storeLocation, foodAvailabilityMaps) === "out_of_stock") return
     addToCart({
       foodId: food.id,
       foodName: food.name,
@@ -212,13 +221,13 @@ export function MenuContent({
 
       {/* Results Count */}
       <p className="text-sm text-muted-foreground">
-        {foods.length} {foods.length === 1 ? "item" : "items"} found
+        {visibleFoods.length} {visibleFoods.length === 1 ? "item" : "items"} found
       </p>
 
       {/* Loading Overlay */}
       <div className={`relative ${isPending ? "opacity-50 pointer-events-none" : ""}`}>
         {/* Food Grid */}
-        {foods.length === 0 ? (
+        {visibleFoods.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
               <Search className="h-8 w-8 text-muted-foreground" />
@@ -237,7 +246,9 @@ export function MenuContent({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {foods.map((food) => {
+            {visibleFoods.map((food) => {
+              const ui = foodMenuUiStatus(food, storeLocation, foodAvailabilityMaps)
+              const outOfStock = ui === "out_of_stock"
               const { totalQuantity } = getCartInfoForFood(food.id)
               const inCart = totalQuantity > 0
               return (
@@ -258,7 +269,12 @@ export function MenuContent({
                         {food.category.name}
                       </span>
                     )}
-                    {inCart && (
+                    {outOfStock && (
+                      <span className="absolute top-3 right-3 bg-amber-600 text-white text-[10px] font-semibold px-2 py-1 rounded-full shadow">
+                        Out of stock
+                      </span>
+                    )}
+                    {inCart && !outOfStock && (
                       <span className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-bold min-w-[22px] h-[22px] rounded-full flex items-center justify-center shadow">
                         {totalQuantity}
                       </span>
@@ -277,7 +293,9 @@ export function MenuContent({
                       <span className="text-base sm:text-lg font-semibold text-foreground">
                         &#8358;{formatPrice(food.price)}
                       </span>
-                      {inCart ? (
+                      {outOfStock ? (
+                        <span className="text-xs font-medium text-amber-700 dark:text-amber-400">Out of stock</span>
+                      ) : inCart ? (
                         <div className="flex items-center gap-0.5" onClick={(e) => e.preventDefault()}>
                           {totalQuantity === 1 ? (
                             <Button
