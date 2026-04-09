@@ -1,15 +1,10 @@
-import { redirect } from "next/navigation"
+import { SignupForm } from "./signup-form"
 
-/**
- * Sign up is the same as sign in: use "Continue with email" on the login page.
- * We send a code; new users get an account when they verify.
- */
-export default async function SignupPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ redirect?: string }>
-}) {
-  const params = await searchParams
-  const redirectTo = params.redirect ?? "/"
-  redirect(`/login?redirect=${encodeURIComponent(redirectTo)}`)
+export const metadata = {
+  title: "Create account | Manchi",
+  description: "Sign up for Manchi Takeout with your email and password.",
+}
+
+export default function SignupPage() {
+  return <SignupForm />
 }

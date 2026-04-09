@@ -55,9 +55,8 @@ export function getBranchDisplayInfo(location: StoreLocation): { label: string; 
       }
     case "Aurora":
       return {
-        label: "Aurora Mall · Port Harcourt",
-        subtitle:
-          "Aurora Mall, No. 39 Uyo Street off Stadium Road, Beside Save a Life, Rumuomasi, Port Harcourt, Rivers State",
+        label: "Port Harcourt — Aurora",
+        subtitle: "Opposite Eromo Filling Station, New Road Eneka Atali Road, Rivers State",
       }
     case "Eromo":
       return {

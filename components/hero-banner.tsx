@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import type { FoodWithCategory } from "@/lib/db/types"
 import { useCart } from "@/lib/cart/cart-context"
 import { useAvailability } from "@/lib/availability/availability-context"
-import { foodMenuUiStatus } from "@/lib/availability/status"
+import { effectiveFoodMenuUiStatus } from "@/lib/availability/status"
+import { useBranchAvailability } from "@/lib/browse/branch-availability-context"
 
 const PLACEHOLDER_IMAGE = "/placeholder-food.jpg"
 
@@ -19,10 +20,14 @@ interface HeroBannerProps {
 export function HeroBanner({ foods = [] }: HeroBannerProps) {
   const { storeLocation } = useCart()
   const { foods: foodAvailabilityMaps } = useAvailability()
+  const { applyBranchAvailability } = useBranchAvailability()
   // Get featured foods (ones with images, max 5) — respect branch availability
   const featuredFoods = foods
     .filter((f) => f.image_url)
-    .filter((f) => foodMenuUiStatus(f, storeLocation, foodAvailabilityMaps) !== "hidden")
+    .filter(
+      (f) =>
+        effectiveFoodMenuUiStatus(f, applyBranchAvailability, storeLocation, foodAvailabilityMaps) !== "hidden"
+    )
     .slice(0, 5)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isHoveringCart, setIsHoveringCart] = useState(false)
@@ -67,11 +72,20 @@ export function HeroBanner({ foods = [] }: HeroBannerProps) {
 
   const currentFood = featuredFoods[currentIndex]
   const currentUi = currentFood
-    ? foodMenuUiStatus(currentFood, storeLocation, foodAvailabilityMaps)
+    ? effectiveFoodMenuUiStatus(
+        currentFood,
+        applyBranchAvailability,
+        storeLocation,
+        foodAvailabilityMaps
+      )
     : "available"
 
   const handleAddToCart = (food: FoodWithCategory) => {
-    if (foodMenuUiStatus(food, storeLocation, foodAvailabilityMaps) === "out_of_stock") return
+    if (
+      effectiveFoodMenuUiStatus(food, applyBranchAvailability, storeLocation, foodAvailabilityMaps) ===
+      "out_of_stock"
+    )
+      return
     addToCart({
       foodId: food.id,
       foodName: food.name,

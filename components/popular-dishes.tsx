@@ -8,7 +8,8 @@ import type { FoodWithCategory } from "@/lib/db/types"
 import { formatPrice } from "@/lib/format"
 import { useCart } from "@/lib/cart/cart-context"
 import { useAvailability } from "@/lib/availability/availability-context"
-import { foodMenuUiStatus } from "@/lib/availability/status"
+import { effectiveFoodMenuUiStatus } from "@/lib/availability/status"
+import { useBranchAvailability } from "@/lib/browse/branch-availability-context"
 
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&h=260&fit=crop&q=80"
 
@@ -21,9 +22,14 @@ interface PopularDishesProps {
 export function PopularDishes({ foods, title = "Popular dishes", subtitle = "Crowd favourites that our customers order again and again." }: PopularDishesProps) {
   const { cart, addToCart, updateQuantity, removeFromCart, storeLocation } = useCart()
   const { foods: foodAvailabilityMaps } = useAvailability()
+  const { applyBranchAvailability } = useBranchAvailability()
   const visible = useMemo(
-    () => foods.filter((f) => foodMenuUiStatus(f, storeLocation, foodAvailabilityMaps) !== "hidden"),
-    [foods, storeLocation, foodAvailabilityMaps]
+    () =>
+      foods.filter(
+        (f) =>
+          effectiveFoodMenuUiStatus(f, applyBranchAvailability, storeLocation, foodAvailabilityMaps) !== "hidden"
+      ),
+    [foods, applyBranchAvailability, storeLocation, foodAvailabilityMaps]
   )
 
   const getCartInfoForFood = (foodId: number) => {
@@ -36,7 +42,11 @@ export function PopularDishes({ foods, title = "Popular dishes", subtitle = "Cro
   const handleAddToCart = (e: React.MouseEvent, food: FoodWithCategory) => {
     e.preventDefault()
     e.stopPropagation()
-    if (foodMenuUiStatus(food, storeLocation, foodAvailabilityMaps) === "out_of_stock") return
+    if (
+      effectiveFoodMenuUiStatus(food, applyBranchAvailability, storeLocation, foodAvailabilityMaps) ===
+      "out_of_stock"
+    )
+      return
     addToCart({
       foodId: food.id,
       foodName: food.name,
@@ -92,7 +102,12 @@ export function PopularDishes({ foods, title = "Popular dishes", subtitle = "Cro
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {visible.map((food) => {
-            const ui = foodMenuUiStatus(food, storeLocation, foodAvailabilityMaps)
+            const ui = effectiveFoodMenuUiStatus(
+              food,
+              applyBranchAvailability,
+              storeLocation,
+              foodAvailabilityMaps
+            )
             const outOfStock = ui === "out_of_stock"
             const { totalQuantity } = getCartInfoForFood(food.id)
             const inCart = totalQuantity > 0
