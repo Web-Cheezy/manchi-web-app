@@ -430,7 +430,7 @@ export function CheckoutContent({
             </div>
             {!isPickup && (
               <div className="flex justify-between text-muted-foreground">
-                <span>Transport fee</span>
+                <span>Delivery fee</span>
                 <span>₦{formatPrice(deliveryFee)}</span>
               </div>
             )}
